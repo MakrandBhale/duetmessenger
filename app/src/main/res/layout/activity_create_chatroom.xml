@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".CreateChatroom"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="36dp"
+    >
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="visible"
+        android:id="@+id/new_chatroom_layout"
+        >
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Create a chatroom"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:id="@+id/title"
+        />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="In order to chat, you have to create a chatroom and share its id with your partner."
+        android:textAlignment="center"
+        android:layout_margin="8dp"
+        android:id="@+id/subtitle"
+        />
+
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="24dp"
+        android:id="@+id/loader"
+        android:visibility="invisible"
+        />
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/chatroom_id"
+        android:background="@drawable/edittext_round"
+        android:paddingStart="18dp"
+        android:paddingEnd="18dp"
+        android:padding="12dp"
+        android:layout_margin="16dp"
+        android:visibility="gone"
+        />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_background"
+        android:text="Create chatroom"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:textColor="@color/textPrimaryLight"
+        android:layout_margin="18dp"
+        android:id="@+id/create_chatroom_button"
+        />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:id="@+id/existing_chatroom_layout"
+        android:visibility="gone"
+        android:gravity="center"
+        >
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Enter existing chatroom"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:id="@+id/title1"
+            android:textAlignment="center"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Enter an id shared by your partner to enter the chatroom previously created."
+            android:textAlignment="center"
+            android:layout_margin="8dp"
+            android:id="@+id/subtitle1"
+            />
+
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="24dp"
+            android:id="@+id/loader1"
+            android:visibility="gone"
+            />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/chatroom_id1"
+            android:background="@drawable/edittext_round"
+            android:paddingStart="18dp"
+            android:paddingEnd="18dp"
+            android:padding="12dp"
+            android:layout_margin="16dp"
+            android:visibility="visible"
+            android:hint="Enter chatroom id"
+            android:focusedByDefault="true"
+            android:textAlignment="center"
+            />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/button_background"
+            android:text="Procceed"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:textColor="@color/textPrimaryLight"
+            android:layout_margin="18dp"
+            android:id="@+id/proceed"
+
+            />
+
+    </LinearLayout>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:padding="8dp"
+        android:text="Already have chatroom? Click here to enter"
+        android:id="@+id/enter_chatroom_id"
+        android:textColor="@color/textPrimary"
+        />
+</LinearLayout>
