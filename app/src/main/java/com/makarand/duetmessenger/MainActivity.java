@@ -1,8 +1,11 @@
 package com.makarand.duetmessenger;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -13,22 +16,38 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.textview.MaterialTextView;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
+import com.makarand.duetmessenger.Adapter.MessageListAdapter;
 import com.makarand.duetmessenger.Helper.Constants;
 import com.makarand.duetmessenger.Model.Couple;
 import com.makarand.duetmessenger.Model.Message;
 import com.makarand.duetmessenger.Model.User;
+import com.vanniktech.emoji.EmojiEditText;
+import com.vanniktech.emoji.EmojiManager;
+import com.vanniktech.emoji.EmojiPopup;
+import com.vanniktech.emoji.ios.IosEmojiProvider;
+
+import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 public class MainActivity extends AppCompatActivity {
     DatabaseReference myRef, partnerRef, chatroomRef, coupleRef, chatsRef;
@@ -36,29 +55,45 @@ public class MainActivity extends AppCompatActivity {
     String myUid, partnerUid;
     User me, partner;
     Animation fadeIn, fadeOut;
+    MessageListAdapter adapter;
+    final ArrayList<Message> messageArrayList = new ArrayList<>();
+    EmojiPopup emojiPopup;
 
     @BindView(R.id.partner_name) TextView partnerName;
     @BindView(R.id.status_text) TextView statusText;
     @BindView(R.id.send_button) ImageButton sendButton;
-    @BindView(R.id.message_box) EditText messageBox;
+    @BindView(R.id.emojiButton) ImageButton emojiButton;
+    @BindView(R.id.message_box)
+    EmojiEditText messageBox;
+    @BindView(R.id.message_list) RecyclerView messageList;
+    @BindView(R.id.rootView) LinearLayout rootView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EmojiManager.install(new IosEmojiProvider());
         setContentView(R.layout.activity_main);
-        Toolbar myToolbar = findViewById(R.id.toolbar);
+        MaterialToolbar myToolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
+
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         ButterKnife.bind(this);
         mAuth = FirebaseAuth.getInstance();
 
+        emojiPopup = EmojiPopup.Builder.fromRootView(rootView)
+                .setOnEmojiPopupShownListener(() -> emojiButton.setImageResource(R.drawable.ic_keyboard_24px))
+                .setOnEmojiPopupDismissListener(() -> emojiButton.setImageResource(R.drawable.ic_emoji_24px))
+
+                .build(messageBox);
         fadeIn = AnimationUtils.loadAnimation(this, R.anim.fade_in);
         fadeOut = AnimationUtils.loadAnimation(this, R.anim.fade_out);
 
         myUid = mAuth.getCurrentUser().getUid();
         myRef = FirebaseDatabase.getInstance().getReference(Constants.USERS_TREE).child(myUid);
+
         myRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
                 me = dataSnapshot.getValue(User.class);
                 getChatroomRef(me);
             }
@@ -74,6 +109,17 @@ public class MainActivity extends AppCompatActivity {
                 sendMessage();
             }
         });
+
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        linearLayoutManager.setStackFromEnd(true);
+        messageList.setLayoutManager(linearLayoutManager);
+
+    }
+
+    @OnClick(R.id.emojiButton)
+    public void openEmojiPanel(View v){
+        emojiPopup.toggle();
+
     }
 
     private void sendMessage(){
@@ -81,8 +127,27 @@ public class MainActivity extends AppCompatActivity {
 
         if(messageText.length() <= 0)
             return;
+        messageBox.setText("");
+        Message message = new Message(myUid, partnerUid, messageText, Constants.MESSAGE_STATUS_SENDING);
+        chatsRef.push().setValue(message).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                messageList.scrollToPosition(messageList.getAdapter().getItemCount() - 1);
+                //chatsRef.child(messageId).child("messageStatus").setValue("");
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                chatsRef.push().setValue(message);
+            }
+        });
+    }
 
-        Message message = new Message(myUid, partnerUid,String.valueOf(ServerValue.TIMESTAMP), messageText);
+    private void trySendingMessageAgain(Message message){
+        /*Just in case the message failed to be sent, a helper method.
+        * Don't be surprised if timestamp is of past because message object is created at previous time.
+        * */
+        chatsRef.push().setValue(message);
     }
     private void pullUp(){
         partnerName.animate()
@@ -105,9 +170,45 @@ public class MainActivity extends AppCompatActivity {
     private void init() {
         addPartnerStatusListener();
         handleMessageBox();
+        fetchMessages();
+    }
+
+    private void fetchMessages() {
+        adapter = new MessageListAdapter(getApplicationContext(), messageArrayList, myUid);
+        messageList.setAdapter(adapter);
+        chatsRef.keepSynced(true);
+        chatsRef.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                messageArrayList.add(dataSnapshot.getValue(Message.class));
+                adapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+                messageArrayList.remove(dataSnapshot.getValue(Message.class));
+                adapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
     private void handleMessageBox(){
+
         messageBox.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -117,13 +218,24 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 myRef.child("online").setValue(Constants.TYPING);
+
             }
 
             @Override
             public void afterTextChanged(Editable s) {
+
                 myRef.child("online").setValue(Constants.ONLINE);
+
             }
         });
+    }
+
+    private void startTimeout() {
+        try{
+            Thread.sleep(1000);
+        } catch (InterruptedException e){
+            Thread.currentThread().interrupt();
+        }
     }
 
     private void addPartnerStatusListener() {
@@ -174,6 +286,7 @@ public class MainActivity extends AppCompatActivity {
         chatroomRef= FirebaseDatabase.getInstance().getReference(Constants.CHATROOMS_TREE).child(user.getChatroomId());
         coupleRef = chatroomRef.child("couple");
         chatsRef = chatroomRef.child("chats");
+        //chatsRef.keepSynced(true);
         coupleRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
