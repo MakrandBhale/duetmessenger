@@ -10,6 +10,7 @@ import com.makarand.duetmessenger.Helper.Constants;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
@@ -77,24 +78,33 @@ public class Message {
     }
 
     @Exclude
-    public String getFormattedDate() {
+    public ArrayList<String> getFormattedDate() {
         Calendar smsTime = Calendar.getInstance();
         smsTime.setTimeInMillis(getMessageTimestamp());
-
+        String date, time;
         Calendar now = Calendar.getInstance();
-
+        ArrayList<String> dateTime = new ArrayList<>();
         final String timeFormatString = "h:mm aa";
-        final String dateTimeFormatString = "MMMM d, h:mm aa";
+        final String monthFormatString = "MMMM d";
+        final String dateHourString = "h:mm aa";
         final long HOURS = 60 * 60 * 60;
         if (now.get(Calendar.DATE) == smsTime.get(Calendar.DATE) ) {
-            return "Today " + DateFormat.format(timeFormatString, smsTime);
+            date = "Today";
+            time = DateFormat.format(timeFormatString, smsTime).toString();
         } else if (now.get(Calendar.DATE) - smsTime.get(Calendar.DATE) == 1  ){
-            return "Yesterday " + DateFormat.format(timeFormatString, smsTime);
+            date = "Yesterday";
+            time = DateFormat.format(timeFormatString, smsTime).toString();
         } else if (now.get(Calendar.YEAR) == smsTime.get(Calendar.YEAR)) {
-            return DateFormat.format(dateTimeFormatString, smsTime).toString();
+            date = DateFormat.format(monthFormatString, smsTime).toString();
+            time =  DateFormat.format(dateHourString, smsTime).toString();
         } else {
-            return DateFormat.format("MMMM dd yyyy, h:mm aa", smsTime).toString();
+            date = DateFormat.format("MMMM dd yyyy", smsTime).toString();
+            time = DateFormat.format("h:mm aa", smsTime).toString();
         }
+
+        dateTime.add(date);
+        dateTime.add(time);
+        return dateTime;
     }
 
 

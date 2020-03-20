@@ -42,7 +42,7 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
     @Override
     public void onBindViewHolder(@NonNull MessageListViewHolder holder, int position) {
         Message message = messageArrayList.get(position);
-        String formattedDate = message.getFormattedDate();
+        ArrayList<String> formattedDate = message.getFormattedDate();
         if(position > 0){
             Message prevMessage = messageArrayList.get(position - 1);
             if(prevMessage != null){
@@ -58,7 +58,7 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
             holder.setTimeText(formattedDate);
         }
         holder.setMessageText(message.getMessage());
-        holder.setListener(formattedDate);
+        //holder.setListener(formattedDate);
     }
 
     @Override

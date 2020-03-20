@@ -8,9 +8,22 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
-        <item name="android:statusBarColor" tools:targetApi="lollipop">@color/textPrimaryLight</item>
-        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
+<!--        <item name="android:statusBarColor" tools:targetApi="lollipop">@color/textPrimaryLight</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>-->
 
     </style>
 
+    <style name="CustomCardViewStyle" parent="@style/Widget.MaterialComponents.CardView">
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay_card_custom_corners</item>
+    </style>
+
+
+    <style name="ShapeAppearanceOverlay_card_custom_corners" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopRight">18dp</item>
+        <item name="cornerSizeTopLeft">18dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="android:padding">0dp</item>
+    </style>
 </resources>

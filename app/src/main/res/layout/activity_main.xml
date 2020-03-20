@@ -9,6 +9,7 @@
     android:clipToPadding="false"
     android:theme="@style/AppTheme"
     android:id="@+id/rootView"
+    android:background="@drawable/toolbar_gradient"
     >
     <include
         android:id="@+id/toolbar"
@@ -16,12 +17,19 @@
         />
 
 
-    <RelativeLayout
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/activity_background"
-        android:orientation="vertical"
+        style="@style/CustomCardViewStyle"
         android:clipToPadding="false"
+        app:cardBackgroundColor="@color/primaryBackgroundDark"
+        app:cardPreventCornerOverlap="true"
+        android:visibility="visible"
+        >
+        <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
         >
 
         <androidx.recyclerview.widget.RecyclerView
@@ -32,85 +40,85 @@
             android:background="@drawable/activity_background"
             android:layout_alignParentTop="true"
             android:clipToPadding="false"
-
             />
-        <LinearLayout
+
+
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/bottom_bar"
+            style="@style/CustomCardViewStyle"
+            app:cardElevation="1dp"
+            app:cardCornerRadius="28dp"
+            app:cardPreventCornerOverlap="true"
+            app:cardBackgroundColor="@color/primaryBackgroundLight"
             android:layout_alignParentBottom="true"
-            android:background="#fff"
+            android:layout_margin="4dp"
+            android:visibility="visible"
             >
-        <LinearLayout
+            <LinearLayout
+                android:layout_margin="4dp"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@drawable/messagebox_background"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                >
+                <ImageButton
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:padding="8dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_emoji_24px"
+                    tools:ignore="ContentDescription"
+                    android:id="@+id/emojiButton"
+                    android:layout_marginStart="4dp"
+                    />
+                <com.vanniktech.emoji.EmojiEditText
+                    android:id="@+id/message_box"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="12dp"
+                    android:layout_weight="1"
+                    android:hint="Type a message..."
+                    android:imeOptions="actionSend"
+                    android:inputType="textMultiLine"
+                    android:maxLines="8"
+                    android:lines="8"
+                    android:textColor="@color/textPrimary"
+                    android:textColorHint="#868686"
+                    android:background="@null"
+                    android:ems="10"
+                    />
+                <!--            <EditText
+                                android:id="@+id/message_box"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="12dp"
+                                android:layout_marginEnd="12dp"
+                                android:layout_weight="1"
+                                android:background="@null"
+                                android:hint="Type a message..."
+                                android:inputType="textMultiLine"
+                                android:maxLines="8"
+                                android:textColor="@color/textPrimary"
+                                android:textColorHint="#868686"
+                                />-->
 
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-
-            android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="8dp"
-            android:background="@drawable/messagebox_background"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-
-            android:clipToPadding="false"
-            android:foreground="?attr/selectableItemBackground"
-            >
-            <ImageButton
-                android:layout_width="42dp"
-                android:layout_height="42dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:padding="8dp"
-                android:scaleType="centerCrop"
-                android:src="@drawable/ic_emoji_24px"
-                tools:ignore="ContentDescription"
-                android:id="@+id/emojiButton"
-                android:layout_marginStart="4dp"
-                />
-            <com.vanniktech.emoji.EmojiEditText
-
-                android:id="@+id/message_box"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_marginEnd="12dp"
-                android:layout_weight="1"
-                android:hint="Type a message..."
-                android:imeOptions="actionSend"
-                android:inputType="textCapSentences|textMultiLine"
-                android:maxLines="8"
-                android:textColor="@color/textPrimary"
-                android:textColorHint="#868686"
-                android:background="@null"
-
-                />
-<!--            <EditText
-                android:id="@+id/message_box"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_marginEnd="12dp"
-                android:layout_weight="1"
-                android:background="@null"
-                android:hint="Type a message..."
-                android:inputType="textMultiLine"
-                android:maxLines="8"
-                android:textColor="@color/textPrimary"
-                android:textColorHint="#868686"
-                />-->
-
-            <androidx.appcompat.widget.AppCompatImageButton
-                android:layout_width="42dp"
-                android:layout_height="42dp"
-                android:background="@drawable/round_button"
-                android:src="@drawable/ic_send_24px"
-                android:id="@+id/send_button"
-                android:foreground="?attr/selectableItemBackgroundBorderless"
-                />
-        </LinearLayout>
-        </LinearLayout>
+                <androidx.appcompat.widget.AppCompatImageButton
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/round_button"
+                    android:src="@drawable/ic_send_24px"
+                    android:id="@+id/send_button"
+                    />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
     </RelativeLayout>
+
+    </com.google.android.material.card.MaterialCardView>
 
 
 </LinearLayout>

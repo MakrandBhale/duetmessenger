@@ -123,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void sendMessage(){
+        if(messageBox.getText() == null) return;
         String messageText = messageBox.getText().toString().trim();
 
         if(messageText.length() <= 0)
@@ -149,7 +150,8 @@ public class MainActivity extends AppCompatActivity {
         * */
         chatsRef.push().setValue(message);
     }
-    private void pullUp(){
+    private void pullUp(String msg){
+        statusText.setText(msg);
         partnerName.animate()
                 .translationY(-24)
                 .setDuration(200)
@@ -248,12 +250,10 @@ public class MainActivity extends AppCompatActivity {
                         pullDown();
                         break;
                     case Constants.ONLINE:
-                        pullUp();
-                        statusText.setText("Online");
+                        pullUp("Online");
                         break;
                     case Constants.TYPING:
-                        pullUp();
-                        statusText.setText("Typing...");
+                        pullUp("Typing...");
                         break;
                 }
             }

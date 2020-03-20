@@ -1,20 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-<!--
-    <color name="colorPrimary">#0336ff</color>
+
+    <color name="colorPrimary">#2855FF</color>
+    <color name="colorPrimaryLight">#4A6FFF</color>
+    <color name="colorPrimaryExtraLight">#E4EAFF</color>
     <color name="colorPrimaryDark">#0008ca</color>
+    <color name="primaryBackground">#f6f5f8</color>
+    <color name="primaryBackgroundLight">#f8fafb</color>
+    <color name="primaryBackgroundDark">#f2f0f5</color>
+    <!--
     <color name="colorPrimaryLight">#3B0336FF</color>
     <color name="colorAccent">#ffde03</color>
     <color name="colorAccentDark">#c7ad00</color>
 -->
 
     <color name="whitePrimary">#FDFDFD</color>
-    <color name="colorPrimary">#413AFF</color>
-    <color name="colorPrimaryDark">#1A0EFF</color>
-    <color name="colorPrimaryLight">#413AFF</color>
+<!--    <color name="colorPrimary">#ff1e81f5</color>
+    <color name="colorPrimaryDark">#1d51f4</color>
+    <color name="colorPrimaryLight">#2069f2</color>
+    -->
+<!--
+    <color name="colorPrimaryExtraLight">#e4f0fe</color>
+-->
 
-    <color name="colorAccent">#5DDA82</color>
-    <color name="colorAccentDark">#52C976</color>
+
+<!--    <color name="colorPrimary">#413AFF</color>
+    <color name="colorPrimaryDark">#1A0EFF</color>
+    <color name="colorPrimaryLight">#413AFF</color>-->
+
+    <color name="colorAccent">#C88630</color>
+    <color name="colorAccentDark">#C88630</color>
     <color name="textPrimary">#535353</color>
     <color name="textPrimaryDark">#333333</color>
     <color name="textPrimaryLight">#EEEEEE</color>
