@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.makarand.duetmessenger.Helper.MessageQueue;
 import com.makarand.duetmessenger.Model.Message;
 import com.makarand.duetmessenger.R;
 import com.makarand.duetmessenger.ViewHolder.MessageListViewHolder;
@@ -19,10 +20,14 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
     private String myUid;
     private static int MY_MESSAGE = 0;
     private static int PARTNER_MESSAGE = 1;
+    private MessageQueue q;
+    private Message myPrevMessage, myNewMessage;
+    private int myPrevMessageIndex = 0;
     public MessageListAdapter(Context context, ArrayList<Message> messageArrayList, String myUid){
         this.context = context;
         this.messageArrayList = messageArrayList;
         this.myUid = myUid;
+        this.q = new MessageQueue();
     }
 
     @NonNull
@@ -39,14 +44,29 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
         return new MessageListViewHolder(view);
     }
 
+    private void swap(Message one, Message two){
+        Message temp;
+        temp = one;
+        one = two;
+        two = temp;
+
+    }
     @Override
     public void onBindViewHolder(@NonNull MessageListViewHolder holder, int position) {
-        Message message = messageArrayList.get(position);
-        ArrayList<String> formattedDate = message.getFormattedDate();
+        Message currentMessage = messageArrayList.get(position);
+
+        ArrayList<String> formattedDate = currentMessage.getFormattedDate();
+
+        if(currentMessage.getSender().equals(myUid)){
+            if(currentMessage.isShowMessageStatus()){
+                holder.showMessageStatus(currentMessage.getMessageStatus());
+            } else holder.hideMessageStatus();
+        }
+
         if(position > 0){
             Message prevMessage = messageArrayList.get(position - 1);
             if(prevMessage != null){
-                if(message.isLateReply(prevMessage)){
+                if(currentMessage.isLateReply(prevMessage)){
                     holder.setTimeText(formattedDate);
                 } else {
                     holder.removeTimeText();
@@ -57,7 +77,9 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
         } else {
             holder.setTimeText(formattedDate);
         }
-        holder.setMessageText(message.getMessage());
+        holder.setMessageText(currentMessage.getMessage());
+
+        //myPrevMessage = currentMessage;
         //holder.setListener(formattedDate);
     }
 

@@ -6,6 +6,8 @@
     android:layout_height="?attr/actionBarSize"
     app:elevation="0dp"
     android:elevation="0dp"
+    android:fitsSystemWindows="true"
+
     >
 <com.google.android.material.appbar.MaterialToolbar
     android:layout_width="match_parent"
@@ -47,8 +49,10 @@
                 android:textSize="18sp"
                 android:layout_gravity="center_vertical"
                 android:gravity="center_vertical"
-                android:textStyle="bold"
                 android:layout_centerHorizontal="true"
+                android:fontFamily="@font/bold"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
                 />
 
             <com.google.android.material.textview.MaterialTextView
@@ -59,11 +63,12 @@
                 android:layout_gravity="center_vertical"
                 android:gravity="center_vertical"
                 android:textColor="#E2E2E2"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="16dp"
                 android:textSize="14sp"
                 android:textAlignment="center"
                 android:visibility="gone"
                 android:layout_centerHorizontal="true"
+                android:fontFamily="@font/regular"
                 />
         </RelativeLayout>
     </LinearLayout>

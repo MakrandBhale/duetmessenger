@@ -8,25 +8,24 @@ import com.google.firebase.database.IgnoreExtraProperties;
 import com.google.firebase.database.ServerValue;
 import com.makarand.duetmessenger.Helper.Constants;
 
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
 
 @IgnoreExtraProperties
 public class Message {
     private String sender, receiver, message;
     private int messageStatus;
     private Object timestamp;
+    private String messageId;
+    @Exclude private boolean showMessageStatus = false;
 
-    public Message(String sender, String receiver, String message, int messageStatus) {
+    public Message(String messageId, String sender, String receiver, String message, int messageStatus) {
         this.sender = sender;
         this.receiver = receiver;
         this.message = message;
         this.messageStatus = messageStatus;
         this.timestamp = ServerValue.TIMESTAMP;
+        this.messageId = messageId;
     }
 
     public Message() {
@@ -56,6 +55,14 @@ public class Message {
         this.timestamp = timestamp;
     }
 
+    public String getMessageId() {
+        return messageId;
+    }
+
+    public void setMessageId(String messageId) {
+        this.messageId = messageId;
+    }
+
     public String getMessage() {
         return message;
     }
@@ -70,6 +77,16 @@ public class Message {
 
     public void setMessageStatus(int messageStatus) {
         this.messageStatus = messageStatus;
+    }
+
+    @Exclude
+    public boolean isShowMessageStatus() {
+        return showMessageStatus;
+    }
+
+    @Exclude
+    public void setShowMessageStatus(boolean showMessageStatusb) {
+        this.showMessageStatus = showMessageStatusb;
     }
 
     @Exclude
@@ -154,5 +171,15 @@ public class Message {
     }
 */
 
+    @Exclude
+    @Override
+    public boolean equals(Object otherObject){
+        if(otherObject instanceof Message){
+            Message otherMessage = (Message) otherObject;
+            return this.getMessageId().equals(otherMessage.getMessageId());
+            /*Same Message*/
+        }
+        return false;
+    }
 }
 

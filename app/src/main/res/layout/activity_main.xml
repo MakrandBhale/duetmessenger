@@ -10,6 +10,8 @@
     android:theme="@style/AppTheme"
     android:id="@+id/rootView"
     android:background="@drawable/toolbar_gradient"
+    android:fitsSystemWindows="true"
+
     >
     <include
         android:id="@+id/toolbar"
@@ -91,6 +93,8 @@
                     android:textColorHint="#868686"
                     android:background="@null"
                     android:ems="10"
+                    android:fontFamily="@font/regular"
+
                     />
                 <!--            <EditText
                                 android:id="@+id/message_box"

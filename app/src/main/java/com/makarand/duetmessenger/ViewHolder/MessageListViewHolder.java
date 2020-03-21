@@ -9,24 +9,31 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.database.annotations.NotNull;
+import com.makarand.duetmessenger.Helper.Constants;
 import com.makarand.duetmessenger.R;
 import com.vanniktech.emoji.EmojiTextView;
 
 import java.util.ArrayList;
 
+import butterknife.BindView;
+
 public class MessageListViewHolder extends RecyclerView.ViewHolder {
     private EmojiTextView messageText;
     private TextView timeText;
     private TextView dateText;
-    private RelativeLayout messageBubble;
+    private TextView statusTextTextView;
+    //private LinearLayout messageBubble;
     private LinearLayout timeDateContainer;
+    private LinearLayout messageStatusContainer;
     public MessageListViewHolder(@NotNull View view){
         super(view);
         messageText = view.findViewById(R.id.message_text);
         timeText = view.findViewById(R.id.message_time);
         dateText = view.findViewById(R.id.message_date);
-        messageBubble = view.findViewById(R.id.bubble);
+        //messageBubble = view.findViewById(R.id.bubble);
         timeDateContainer = view.findViewById(R.id.date_time_container);
+        messageStatusContainer = view.findViewById(R.id.message_status_container);
+        statusTextTextView = view.findViewById(R.id.message_status_text);
     }
 
     public void setMessageText(String message){
@@ -61,4 +68,26 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
         timeDateContainer.setVisibility(View.GONE);
     }
 
+    public void showMessageStatus(int status) {
+        messageStatusContainer.setVisibility(View.VISIBLE);
+        String statusText="";
+        switch (status){
+            case Constants.MESSAGE_STATUS_DELIVERED:
+                statusTextTextView.setText("Delivered");
+                break;
+            case Constants.MESSAGE_STATUS_READ:
+                statusTextTextView.setText("Read");
+                break;
+            case Constants.MESSAGE_STATUS_SENDING:
+                statusTextTextView.setText("Sending");
+                break;
+            case Constants.MESSAGE_STATUS_SENT:
+                statusTextTextView.setText("Sent");
+                break;
+        }
+    }
+
+    public void hideMessageStatus() {
+        messageStatusContainer.setVisibility(View.GONE);
+    }
 }

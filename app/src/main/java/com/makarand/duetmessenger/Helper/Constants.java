@@ -8,7 +8,7 @@ public class Constants {
     public static final int OFFLINE = -1;
     public static final int TYPING = 1;
 
-    public static final int MESSAGE_STATUS_SENDING = -1;
+    public static final int MESSAGE_STATUS_SENDING = -2;
     public static final int MESSAGE_STATUS_SENT = -1;
     public static final int MESSAGE_STATUS_DELIVERED = 0;
     public static final int MESSAGE_STATUS_READ = 1;

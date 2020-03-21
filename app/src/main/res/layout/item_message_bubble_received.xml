@@ -30,6 +30,7 @@
             android:text="Today"
             android:layout_marginEnd="4dp"
             android:textSize="12sp"
+            android:fontFamily="@font/bold"
             />
         <TextView
             android:id="@+id/message_time"
@@ -38,6 +39,7 @@
             android:text="12:00 PM"
             android:textColor="#7C7C7C"
             android:textSize="12sp"
+            android:fontFamily="@font/regular"
             />
     </LinearLayout>
 
@@ -47,13 +49,13 @@
         android:layout_marginStart="4dp">
 
 
-        <RelativeLayout
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:clipToPadding="false"
-            android:padding="2dp">
-
+            android:gravity="start"
+            android:orientation="vertical">
 
             <RelativeLayout
                 android:id="@+id/bubble"
@@ -80,10 +82,29 @@
                     android:textAlignment="textStart"
                     android:textColor="@color/primaryBackgroundLight"
                     android:textSize="16sp"
-                    app:emojiSize="20sp" />
+                    app:emojiSize="20sp"
+                    android:fontFamily="@font/regular"
+                    />
+
             </RelativeLayout>
 
-        </RelativeLayout>
+<!--            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:id="@+id/message_status_container"
+                >
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/message_status_text"
+                    android:text="Seen"
+                    android:textSize="12sp"
+                    android:fontFamily="@font/semibold"
+
+                    />
+            </LinearLayout>-->
+        </LinearLayout>
 
         <View
             android:layout_width="0dp"

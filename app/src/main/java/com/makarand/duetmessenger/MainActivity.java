@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -38,12 +39,15 @@ import com.makarand.duetmessenger.Helper.Constants;
 import com.makarand.duetmessenger.Model.Couple;
 import com.makarand.duetmessenger.Model.Message;
 import com.makarand.duetmessenger.Model.User;
+import com.makarand.duetmessenger.Threads.TypingThread;
 import com.vanniktech.emoji.EmojiEditText;
 import com.vanniktech.emoji.EmojiManager;
 import com.vanniktech.emoji.EmojiPopup;
 import com.vanniktech.emoji.ios.IosEmojiProvider;
 
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -129,12 +133,16 @@ public class MainActivity extends AppCompatActivity {
         if(messageText.length() <= 0)
             return;
         messageBox.setText("");
-        Message message = new Message(myUid, partnerUid, messageText, Constants.MESSAGE_STATUS_SENDING);
-        chatsRef.push().setValue(message).addOnSuccessListener(new OnSuccessListener<Void>() {
+        String messageId = chatsRef.push().getKey();
+        Message message = new Message(messageId, myUid, partnerUid, messageText, Constants.MESSAGE_STATUS_SENDING);
+        messageList.scrollToPosition(messageList.getAdapter().getItemCount() - 1);
+
+
+        chatsRef.child(messageId).setValue(message).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
-                messageList.scrollToPosition(messageList.getAdapter().getItemCount() - 1);
-                //chatsRef.child(messageId).child("messageStatus").setValue("");
+                chatsRef.child(messageId).child("messageStatus").setValue(Constants.MESSAGE_STATUS_SENT);
+                messageList.getAdapter().notifyDataSetChanged();
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -153,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
     private void pullUp(String msg){
         statusText.setText(msg);
         partnerName.animate()
-                .translationY(-24)
+                .translationY(-16)
                 .setDuration(200)
                 .start();
         statusText.startAnimation(fadeIn);
@@ -179,22 +187,36 @@ public class MainActivity extends AppCompatActivity {
         adapter = new MessageListAdapter(getApplicationContext(), messageArrayList, myUid);
         messageList.setAdapter(adapter);
         chatsRef.keepSynced(true);
+//        TODO : get messages in set of 10, scroll to get more
+        /*https://stackoverflow.com/questions/44777989/firebase-infinite-scroll-list-view-load-10-items-on-scrolling/44796538#44796538*/
         chatsRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 messageArrayList.add(dataSnapshot.getValue(Message.class));
+                updateLastMessageStatus(messageArrayList);
                 adapter.notifyDataSetChanged();
+                messageList.scrollToPosition(messageList.getAdapter().getItemCount() - 1);
+                /*TODO: Go to new Message if you are already at end of list.*/
             }
 
             @Override
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                Message messageToBeUpdated = dataSnapshot.getValue(Message.class);
+                int indexOf = messageArrayList.indexOf(messageToBeUpdated);
+                if(indexOf >= 0)
+                    messageArrayList.set(indexOf, messageToBeUpdated);
+                updateLastMessageStatus(messageArrayList);
 
+                adapter.notifyDataSetChanged();
             }
 
             @Override
             public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+                //Boolean exists0 = messageArrayList.contains(dataSnapshot.getValue(Message.class));
                 messageArrayList.remove(dataSnapshot.getValue(Message.class));
+                //Boolean exists = messageArrayList.contains(dataSnapshot.getValue(Message.class));
                 adapter.notifyDataSetChanged();
+
             }
 
             @Override
@@ -209,36 +231,41 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void updateLastMessageStatus(ArrayList<Message> messageArrayList) {
+        Message lastMessage = null;
+        for(Message m :messageArrayList){
+            if(m.getSender().equals(myUid)){
+                /*My Message*/
+                m.setShowMessageStatus(false);
+                lastMessage = m;
+            }
+        }
+        if(lastMessage != null)  {
+            messageArrayList.get(messageArrayList.indexOf(lastMessage)).setShowMessageStatus(true);
+        }
+    }
+
     private void handleMessageBox(){
+        TypingThread typingThread = new TypingThread(myRef);
 
         messageBox.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
             }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                myRef.child("online").setValue(Constants.TYPING);
-
+                typingThread.typingStarted();
             }
 
             @Override
             public void afterTextChanged(Editable s) {
-
-                myRef.child("online").setValue(Constants.ONLINE);
-
+                typingThread.typingStopped();
+                //myRef.child("online").setValue(Constants.ONLINE);
             }
         });
     }
 
-    private void startTimeout() {
-        try{
-            Thread.sleep(1000);
-        } catch (InterruptedException e){
-            Thread.currentThread().interrupt();
-        }
-    }
 
     private void addPartnerStatusListener() {
         partnerRef.addValueEventListener(new ValueEventListener() {
