@@ -11,8 +11,16 @@
     android:id="@+id/rootView"
     android:background="@drawable/toolbar_gradient"
     android:fitsSystemWindows="true"
-
     >
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/fragment_container_layout"
+        android:background="@color/textPrimaryLight"
+        android:visibility="gone"
+        app:elevation="2dp"
+        />
     <include
         android:id="@+id/toolbar"
         layout="@layout/toolbar"
@@ -28,10 +36,12 @@
         app:cardPreventCornerOverlap="true"
         android:visibility="visible"
         >
+
         <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
+        android:background="@drawable/activity_background"
         >
 
         <androidx.recyclerview.widget.RecyclerView
@@ -39,7 +49,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_above="@id/bottom_bar"
-            android:background="@drawable/activity_background"
             android:layout_alignParentTop="true"
             android:clipToPadding="false"
             />
@@ -112,8 +121,10 @@
                                 />-->
 
                 <androidx.appcompat.widget.AppCompatImageButton
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:padding="8dp"
+                    android:layout_marginEnd="4dp"
                     android:background="@drawable/round_button"
                     android:src="@drawable/ic_send_24px"
                     android:id="@+id/send_button"

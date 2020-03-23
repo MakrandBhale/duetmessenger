@@ -19,13 +19,29 @@
     android:id="@+id/my_toolbar"
 
     >
-    <com.makeramen.roundedimageview.RoundedImageView
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="42dp"
         android:layout_height="42dp"
-        android:scaleType="fitCenter"
-        android:visibility="gone"
-        android:src="@drawable/ic_old_man"
-        />
+        android:background="#000"
+        android:innerRadius="0dp"
+        android:shape="ring"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="2dp"
+        >
+
+        <com.makeramen.roundedimageview.RoundedImageView
+            android:id="@+id/partner_avtar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_user"
+            app:riv_mutate_background="true"
+            app:riv_oval="true"
+            android:layout_margin="2dp"
+            />
+    </com.google.android.material.card.MaterialCardView>
+
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="match_parent"

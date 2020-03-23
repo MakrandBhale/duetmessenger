@@ -4,7 +4,7 @@ import com.google.firebase.database.IgnoreExtraProperties;
 
 @IgnoreExtraProperties
 public class User {
-    String name, email, uid, chatroomId;
+    String name, email, uid, chatroomId, avtar;
     int online;
 
     public User(String name, String email, String uid, String chatroomId, int online) {
@@ -13,6 +13,14 @@ public class User {
         this.uid = uid;
         this.chatroomId = chatroomId;
         this.online = online;
+    }
+
+    public String getAvtar() {
+        return avtar;
+    }
+
+    public void setAvtar(String avtar) {
+        this.avtar = avtar;
     }
 
     public int getOnline() {

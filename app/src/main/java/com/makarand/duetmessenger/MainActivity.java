@@ -4,23 +4,34 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.daimajia.androidanimations.library.Techniques;
+import com.daimajia.androidanimations.library.YoYo;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.appbar.AppBarLayout;
@@ -34,26 +45,30 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.StorageReference;
 import com.makarand.duetmessenger.Adapter.MessageListAdapter;
+import com.makarand.duetmessenger.Fragments.SettingsFragment;
 import com.makarand.duetmessenger.Helper.Constants;
+import com.makarand.duetmessenger.Helper.LocalStorage;
 import com.makarand.duetmessenger.Model.Couple;
 import com.makarand.duetmessenger.Model.Message;
 import com.makarand.duetmessenger.Model.User;
 import com.makarand.duetmessenger.Threads.TypingThread;
+
+import com.theartofdev.edmodo.cropper.CropImage;
 import com.vanniktech.emoji.EmojiEditText;
 import com.vanniktech.emoji.EmojiManager;
 import com.vanniktech.emoji.EmojiPopup;
 import com.vanniktech.emoji.ios.IosEmojiProvider;
 
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.HashMap;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SettingsFragment.OnFragmentInteractionListener{
     DatabaseReference myRef, partnerRef, chatroomRef, coupleRef, chatsRef;
     FirebaseAuth mAuth;
     String myUid, partnerUid;
@@ -67,10 +82,12 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.status_text) TextView statusText;
     @BindView(R.id.send_button) ImageButton sendButton;
     @BindView(R.id.emojiButton) ImageButton emojiButton;
-    @BindView(R.id.message_box)
-    EmojiEditText messageBox;
+    @BindView(R.id.message_box) EmojiEditText messageBox;
+    @BindView(R.id.partner_avtar)
+    ImageView avtarImageView;
     @BindView(R.id.message_list) RecyclerView messageList;
     @BindView(R.id.rootView) LinearLayout rootView;
+    @BindView(R.id.fragment_container_layout)FrameLayout fragmentContainer;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -110,6 +127,9 @@ public class MainActivity extends AppCompatActivity {
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                YoYo.with(Techniques.Pulse)
+                        .duration(250)
+                        .playOn(sendButton);
                 sendMessage();
             }
         });
@@ -117,7 +137,9 @@ public class MainActivity extends AppCompatActivity {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setStackFromEnd(true);
         messageList.setLayoutManager(linearLayoutManager);
-
+        /*Just for some time*/
+        //startSettingsFragment();
+        //fetchAvtar();
     }
 
     @OnClick(R.id.emojiButton)
@@ -192,10 +214,33 @@ public class MainActivity extends AppCompatActivity {
         chatsRef.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                messageArrayList.add(dataSnapshot.getValue(Message.class));
-                updateLastMessageStatus(messageArrayList);
-                adapter.notifyDataSetChanged();
-                messageList.scrollToPosition(messageList.getAdapter().getItemCount() - 1);
+                Message message = dataSnapshot.getValue(Message.class);
+                if(message == null) return;
+                try{
+                    if(message.getSender().equals(partnerUid)){
+                        String messageKey = dataSnapshot.getKey();
+                        DatabaseReference messageRef = chatsRef.child(messageKey);
+                        HashMap<String, Object> messageStatusUpdate = new HashMap<>();
+                        messageStatusUpdate.put("arrivalTime", ServerValue.TIMESTAMP);
+                        messageStatusUpdate.put("messageStatus", Constants.MESSAGE_STATUS_DELIVERED);
+                        messageRef.updateChildren(messageStatusUpdate).addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                Toast.makeText(MainActivity.this, "updated", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        //messageRef.child("arrivalTime").setValue(ServerValue.TIMESTAMP);
+                        //messageRef.child("messageStatus").setValue(Constants.MESSAGE_STATUS_DELIVERED);
+                    }
+                    messageArrayList.add(message);
+                    updateLastMessageStatus(messageArrayList);
+                    adapter.notifyDataSetChanged();
+                    messageList.scrollToPosition(messageList.getAdapter().getItemCount() - 1);
+                } catch (NullPointerException e){
+                    e.printStackTrace();
+                }
+
+
                 /*TODO: Go to new Message if you are already at end of list.*/
             }
 
@@ -216,7 +261,6 @@ public class MainActivity extends AppCompatActivity {
                 messageArrayList.remove(dataSnapshot.getValue(Message.class));
                 //Boolean exists = messageArrayList.contains(dataSnapshot.getValue(Message.class));
                 adapter.notifyDataSetChanged();
-
             }
 
             @Override
@@ -255,7 +299,8 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                typingThread.typingStarted();
+                if(count > 0)
+                    typingThread.typingStarted();
             }
 
             @Override
@@ -345,9 +390,15 @@ public class MainActivity extends AppCompatActivity {
         partnerRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                partner = dataSnapshot.getValue(User.class);
-                partnerName.setText(partner.getName());
-                init();
+                try{
+                    partner = dataSnapshot.getValue(User.class);
+                    partnerName.setText(partner.getName());
+                    init();
+                    setupPartnerAvtarListener(partnerRef);
+                } catch (Exception e){
+                    Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+
             }
 
             @Override
@@ -357,5 +408,105 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void setupPartnerAvtarListener(DatabaseReference partnerRef) {
+        LocalStorage localStorage = new LocalStorage(this);
 
+        partnerRef.child("avtar").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                String avtarUri = dataSnapshot.getValue(String.class);
+                Glide
+                        .with(getApplicationContext())
+                        .load(avtarUri)
+                        .centerCrop()
+                        .placeholder(R.drawable.ic_user)
+                        .into(avtarImageView);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void storePartnerAvtarLocally(String avtarUri) {
+        /*make sure to store uri in local storage*/
+
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        getMenuInflater().inflate(R.menu.main_activity_menu, menu);
+
+        MenuItem item= menu.findItem(R.id.settings);
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.settings:
+                startSettingsFragment();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void startSettingsFragment() {
+        Fragment settingsFragment = new SettingsFragment();
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        //fragmentTransaction.setCustomAnimations(R.anim.fragments_enter_animation, R.anim.fragments_exit_animation);
+
+        fragmentTransaction.add(R.id.fragment_container_layout, settingsFragment, "SettingsFragment");
+        fragmentContainer.setVisibility(View.VISIBLE);
+        fragmentTransaction.addToBackStack("SettingsFragment");
+        fragmentTransaction.commit();
+    }
+
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        Fragment fragment = (Fragment) getSupportFragmentManager().findFragmentByTag("SettingsFragment");
+        if (fragment != null) {
+            fragment.onActivityResult(requestCode, resultCode, data);
+        }
+
+        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
+            CropImage.ActivityResult result = CropImage.getActivityResult(data);
+            if (resultCode == RESULT_OK) {
+                Uri resultUri = result.getUri();
+            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
+                Exception error = result.getError();
+            }
+        }
+
+    }
+    @Override
+    public void onBackPressed(){
+        int count = getSupportFragmentManager().getBackStackEntryCount();
+        if(count == 0){
+            super.onBackPressed();
+
+        } else {
+            getSupportFragmentManager().popBackStack();
+            fragmentContainer.setVisibility(View.GONE);
+/*            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+
+                }
+            }, 300);*/
+        }
+    }
 }

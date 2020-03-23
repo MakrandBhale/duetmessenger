@@ -6,8 +6,11 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import androidx.appcompat.view.menu.MenuView;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.daimajia.androidanimations.library.Techniques;
+import com.daimajia.androidanimations.library.YoYo;
 import com.google.firebase.database.annotations.NotNull;
 import com.makarand.duetmessenger.Helper.Constants;
 import com.makarand.duetmessenger.R;
@@ -25,6 +28,8 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
     //private LinearLayout messageBubble;
     private LinearLayout timeDateContainer;
     private LinearLayout messageStatusContainer;
+    private View view;
+
     public MessageListViewHolder(@NotNull View view){
         super(view);
         messageText = view.findViewById(R.id.message_text);
@@ -68,16 +73,16 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
         timeDateContainer.setVisibility(View.GONE);
     }
 
+    public void showMessageStatus(String status){
+        messageStatusContainer.setVisibility(View.VISIBLE);
+
+        statusTextTextView.setText("Delivered • " + status);
+    }
+
     public void showMessageStatus(int status) {
         messageStatusContainer.setVisibility(View.VISIBLE);
         String statusText="";
         switch (status){
-            case Constants.MESSAGE_STATUS_DELIVERED:
-                statusTextTextView.setText("Delivered");
-                break;
-            case Constants.MESSAGE_STATUS_READ:
-                statusTextTextView.setText("Read");
-                break;
             case Constants.MESSAGE_STATUS_SENDING:
                 statusTextTextView.setText("Sending");
                 break;
@@ -90,4 +95,6 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
     public void hideMessageStatus() {
         messageStatusContainer.setVisibility(View.GONE);
     }
+
+
 }

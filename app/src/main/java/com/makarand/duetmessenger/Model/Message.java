@@ -11,11 +11,14 @@ import com.makarand.duetmessenger.Helper.Constants;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import io.reactivex.internal.operators.observable.ObservableElementAt;
+
 @IgnoreExtraProperties
 public class Message {
     private String sender, receiver, message;
     private int messageStatus;
     private Object timestamp;
+    private Object arrivalTime;
     private String messageId;
     @Exclude private boolean showMessageStatus = false;
 
@@ -29,6 +32,14 @@ public class Message {
     }
 
     public Message() {
+    }
+
+    public Object getArrivalTime() {
+        return arrivalTime;
+    }
+
+    public void setArrivalTime(Object arrivalTime) {
+        this.arrivalTime = arrivalTime;
     }
 
     public String getSender() {
@@ -122,6 +133,37 @@ public class Message {
         dateTime.add(date);
         dateTime.add(time);
         return dateTime;
+    }
+
+
+    @Exclude
+    public String getFormattedDate(long timestamp) {
+        Calendar smsTime = Calendar.getInstance();
+        smsTime.setTimeInMillis(timestamp);
+        String date, time;
+        Calendar now = Calendar.getInstance();
+        ArrayList<String> dateTime = new ArrayList<>();
+        final String timeFormatString = "h:mm aa";
+        final String monthFormatString = "MMMM d";
+        final String dateHourString = "h:mm aa";
+        final long HOURS = 60 * 60 * 60;
+        if (now.get(Calendar.DATE) == smsTime.get(Calendar.DATE) ) {
+            //date = "Today";
+            date = "";
+            time = DateFormat.format(timeFormatString, smsTime).toString();
+        } else if (now.get(Calendar.DATE) - smsTime.get(Calendar.DATE) == 1  ){
+            date = "Yesterday";
+            time = DateFormat.format(timeFormatString, smsTime).toString();
+        } else if (now.get(Calendar.YEAR) == smsTime.get(Calendar.YEAR)) {
+            date = DateFormat.format(monthFormatString, smsTime).toString();
+            time =  DateFormat.format(dateHourString, smsTime).toString();
+        } else {
+            date = DateFormat.format("MMMM dd yyyy", smsTime).toString();
+            time = DateFormat.format("h:mm aa", smsTime).toString();
+        }
+
+
+        return date + " " + time;
     }
 
 

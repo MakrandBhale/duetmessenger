@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/primaryBackgroundLight"
+    android:orientation="vertical"
+    tools:context=".Fragments.SettingsFragment">
+
+
+
+        <androidx.appcompat.widget.Toolbar
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/partner_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/bold"
+
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:text="Your Profile"
+                    android:textColor="@color/textPrimary"
+                    android:textSize="18sp" />
+
+                <androidx.appcompat.widget.AppCompatImageButton
+                    android:id="@+id/close_button"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="end|center_vertical"
+                    android:background="@drawable/circle_button_light"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_close_24px"
+                    android:layout_marginEnd="12dp"
+                    />
+        </androidx.appcompat.widget.Toolbar>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#fff"
+                android:padding="8dp"
+                app:cardElevation="1dp"
+                app:cardUseCompatPadding="true"
+                app:cardCornerRadius="84dp"
+                >
+
+                <com.makeramen.roundedimageview.RoundedImageView
+                    android:id="@+id/avtar_imageview"
+                    android:layout_width="140dp"
+                    android:layout_height="140dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_user"
+                    app:riv_mutate_background="true"
+                    app:riv_oval="true"
+                    android:layout_margin="4dp"
+                 />
+                <ProgressBar
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/loader"
+                    android:layout_gravity="center"
+                    android:visibility="gone"
+                    />
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.button.MaterialButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Change Avtar"
+                android:fontFamily="@font/semibold"
+                android:id="@+id/change_avtar_button"
+                />
+        </LinearLayout>
+
+    </ScrollView>
+</LinearLayout>

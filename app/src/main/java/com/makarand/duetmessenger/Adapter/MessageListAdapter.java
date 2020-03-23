@@ -4,10 +4,14 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.daimajia.androidanimations.library.Techniques;
+import com.daimajia.androidanimations.library.YoYo;
 import com.makarand.duetmessenger.Helper.MessageQueue;
 import com.makarand.duetmessenger.Model.Message;
 import com.makarand.duetmessenger.R;
@@ -44,13 +48,8 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
         return new MessageListViewHolder(view);
     }
 
-    private void swap(Message one, Message two){
-        Message temp;
-        temp = one;
-        one = two;
-        two = temp;
 
-    }
+
     @Override
     public void onBindViewHolder(@NonNull MessageListViewHolder holder, int position) {
         Message currentMessage = messageArrayList.get(position);
@@ -59,7 +58,15 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
 
         if(currentMessage.getSender().equals(myUid)){
             if(currentMessage.isShowMessageStatus()){
-                holder.showMessageStatus(currentMessage.getMessageStatus());
+                Long arrivalTime =(Long) currentMessage.getArrivalTime();
+                if(arrivalTime != null){
+                    String deliveryTime = currentMessage.getFormattedDate(arrivalTime);
+                    holder.showMessageStatus(deliveryTime);
+                } else {
+                    holder.showMessageStatus(currentMessage.getMessageStatus());
+                }
+
+
             } else holder.hideMessageStatus();
         }
 
@@ -78,10 +85,19 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
             holder.setTimeText(formattedDate);
         }
         holder.setMessageText(currentMessage.getMessage());
-
+        setAnimation(holder.itemView, position);
         //myPrevMessage = currentMessage;
         //holder.setListener(formattedDate);
     }
+
+    private void setAnimation(View itemView, int pos) {
+        /*TODO: animation in recycler view
+        *  */
+//        if(pos != messageArrayList.size() - 1) return;
+//        Animation fadeIn = AnimationUtils.loadAnimation(context, R.anim.fade_in);
+//        itemView.startAnimation(fadeIn);
+    }
+
 
     @Override
     public int getItemCount() {
