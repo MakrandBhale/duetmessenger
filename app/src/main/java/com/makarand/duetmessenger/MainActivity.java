@@ -3,17 +3,16 @@ package com.makarand.duetmessenger;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.animation.Animator;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Menu;
@@ -21,7 +20,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -34,8 +32,8 @@ import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textview.MaterialTextView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
@@ -45,9 +43,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.StorageReference;
 import com.makarand.duetmessenger.Adapter.MessageListAdapter;
-import com.makarand.duetmessenger.Fragments.SettingsFragment;
+import com.makarand.duetmessenger.Fragments.ProfileFragment;
 import com.makarand.duetmessenger.Helper.Constants;
 import com.makarand.duetmessenger.Helper.LocalStorage;
 import com.makarand.duetmessenger.Model.Couple;
@@ -63,12 +60,13 @@ import com.vanniktech.emoji.ios.IosEmojiProvider;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class MainActivity extends AppCompatActivity implements SettingsFragment.OnFragmentInteractionListener{
+public class MainActivity extends AppCompatActivity implements ProfileFragment.OnFragmentInteractionListener{
     DatabaseReference myRef, partnerRef, chatroomRef, coupleRef, chatsRef;
     FirebaseAuth mAuth;
     String myUid, partnerUid;
@@ -77,17 +75,20 @@ public class MainActivity extends AppCompatActivity implements SettingsFragment.
     MessageListAdapter adapter;
     final ArrayList<Message> messageArrayList = new ArrayList<>();
     EmojiPopup emojiPopup;
-
+    LinearLayoutManager linearLayoutManager;
+    int unReadMessages = 0;
     @BindView(R.id.partner_name) TextView partnerName;
     @BindView(R.id.status_text) TextView statusText;
     @BindView(R.id.send_button) ImageButton sendButton;
     @BindView(R.id.emojiButton) ImageButton emojiButton;
     @BindView(R.id.message_box) EmojiEditText messageBox;
-    @BindView(R.id.partner_avtar)
-    ImageView avtarImageView;
-    @BindView(R.id.message_list) RecyclerView messageList;
+    @BindView(R.id.partner_avtar) ImageView avtarImageView;
+    @BindView(R.id.message_list) RecyclerView messageListRecyclerView;
     @BindView(R.id.rootView) LinearLayout rootView;
     @BindView(R.id.fragment_container_layout)FrameLayout fragmentContainer;
+    @BindView(R.id.go_down_button) FloatingActionButton goDownButton;
+    @BindView(R.id.go_down_button_container) LinearLayout goDownLayout;
+    @BindView(R.id.new_messages_counter) MaterialTextView newMessagesCounter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -114,7 +115,6 @@ public class MainActivity extends AppCompatActivity implements SettingsFragment.
         myRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-
                 me = dataSnapshot.getValue(User.class);
                 getChatroomRef(me);
             }
@@ -134,12 +134,108 @@ public class MainActivity extends AppCompatActivity implements SettingsFragment.
             }
         });
 
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+
+
+        linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setStackFromEnd(true);
-        messageList.setLayoutManager(linearLayoutManager);
+        messageListRecyclerView.setLayoutManager(linearLayoutManager);
+        addSeenListener();
+
+        goDownButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                try{
+                    newMessagesCounter.setVisibility(View.GONE);
+                    messageListRecyclerView.scrollToPosition(Objects.requireNonNull(messageListRecyclerView.getAdapter()).getItemCount() - 1);
+                } catch (NullPointerException e){
+                    e.printStackTrace();
+                }
+            }
+        });
         /*Just for some time*/
         //startSettingsFragment();
         //fetchAvtar();
+    }
+
+    private void addSeenListener() {
+        messageListRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+            }
+
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                int firstVisibleMessage = linearLayoutManager.findFirstCompletelyVisibleItemPosition();
+                int lastVisibleMessage = linearLayoutManager.findLastCompletelyVisibleItemPosition();
+                ArrayList<Message> visibleMessagesArrayList = new ArrayList<>();
+                for(int i = firstVisibleMessage; i <= lastVisibleMessage;i++){
+                    if(messageArrayList.size() > lastVisibleMessage && messageArrayList.get(i).getSeenTime() == null){
+                        visibleMessagesArrayList.add(messageArrayList.get(i));
+                    }
+                }
+                for(Message m : visibleMessagesArrayList){
+                    if(m.getSender().equals(partnerUid) && me != null){
+                        DatabaseReference messageRef = FirebaseDatabase.getInstance().getReference(Constants.CHATROOMS_TREE).child(me.getChatroomId()).child("chats").child(m.getMessageId()).child("seenTime");
+                        messageRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                Long value = dataSnapshot.getValue(Long.class);
+                                if(value == null){
+                                    messageRef.setValue(ServerValue.TIMESTAMP);
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                            }
+                        });
+                        //messageRef.child("seenTime").setValue(ServerValue.TIMESTAMP);
+                        //m.setSeenTime(ServerValue.TIMESTAMP);
+                    }
+                }
+
+                /*GO DOWN BUTTON*/
+                if(dy < 0){
+                    if(goDownButton.getVisibility() != View.VISIBLE){
+                        YoYo.with(Techniques.ZoomIn)
+                                .duration(300)
+                                .onStart(new YoYo.AnimatorCallback() {
+                                    @Override
+                                    public void call(Animator animator) {
+                                        goDownButton.setVisibility(View.VISIBLE);
+                                    }
+                                })
+                                .playOn(goDownButton);
+                    }
+                }
+                if(!messageListRecyclerView.canScrollVertically(1)){
+                    unReadMessages = 0;
+                    YoYo.with(Techniques.ZoomOut)
+                            .duration(300)
+                            .onEnd(new YoYo.AnimatorCallback() {
+                                @Override
+                                public void call(Animator animator) {
+                                    goDownButton.setVisibility(View.GONE);
+                                }
+                            })
+                            .playOn(goDownButton);
+
+                    YoYo.with(Techniques.SlideOutRight)
+                            .onStart(new YoYo.AnimatorCallback() {
+                                @Override
+                                public void call(Animator animator) {
+                                    newMessagesCounter.setVisibility(View.GONE);
+                                }
+                            })
+                            .duration(300)
+                            .playOn(newMessagesCounter);
+
+                }
+            }
+        });
     }
 
     @OnClick(R.id.emojiButton)
@@ -157,14 +253,14 @@ public class MainActivity extends AppCompatActivity implements SettingsFragment.
         messageBox.setText("");
         String messageId = chatsRef.push().getKey();
         Message message = new Message(messageId, myUid, partnerUid, messageText, Constants.MESSAGE_STATUS_SENDING);
-        messageList.scrollToPosition(messageList.getAdapter().getItemCount() - 1);
+        messageListRecyclerView.scrollToPosition(messageListRecyclerView.getAdapter().getItemCount() - 1);
 
 
         chatsRef.child(messageId).setValue(message).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
                 chatsRef.child(messageId).child("messageStatus").setValue(Constants.MESSAGE_STATUS_SENT);
-                messageList.getAdapter().notifyDataSetChanged();
+                messageListRecyclerView.getAdapter().notifyDataSetChanged();
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -180,6 +276,7 @@ public class MainActivity extends AppCompatActivity implements SettingsFragment.
         * */
         chatsRef.push().setValue(message);
     }
+
     private void pullUp(String msg){
         statusText.setText(msg);
         partnerName.animate()
@@ -207,7 +304,7 @@ public class MainActivity extends AppCompatActivity implements SettingsFragment.
 
     private void fetchMessages() {
         adapter = new MessageListAdapter(getApplicationContext(), messageArrayList, myUid);
-        messageList.setAdapter(adapter);
+        messageListRecyclerView.setAdapter(adapter);
         chatsRef.keepSynced(true);
 //        TODO : get messages in set of 10, scroll to get more
         /*https://stackoverflow.com/questions/44777989/firebase-infinite-scroll-list-view-load-10-items-on-scrolling/44796538#44796538*/
@@ -217,8 +314,9 @@ public class MainActivity extends AppCompatActivity implements SettingsFragment.
                 Message message = dataSnapshot.getValue(Message.class);
                 if(message == null) return;
                 try{
-                    if(message.getSender().equals(partnerUid)){
+                    if(message.getSender().equals(partnerUid) && !dataSnapshot.hasChild("arrivalTime")){
                         String messageKey = dataSnapshot.getKey();
+                        assert messageKey != null;
                         DatabaseReference messageRef = chatsRef.child(messageKey);
                         HashMap<String, Object> messageStatusUpdate = new HashMap<>();
                         messageStatusUpdate.put("arrivalTime", ServerValue.TIMESTAMP);
@@ -226,16 +324,42 @@ public class MainActivity extends AppCompatActivity implements SettingsFragment.
                         messageRef.updateChildren(messageStatusUpdate).addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
                             public void onSuccess(Void aVoid) {
-                                Toast.makeText(MainActivity.this, "updated", Toast.LENGTH_SHORT).show();
+                                //Toast.makeText(MainActivity.this, "updated", Toast.LENGTH_SHORT).show();
                             }
                         });
                         //messageRef.child("arrivalTime").setValue(ServerValue.TIMESTAMP);
                         //messageRef.child("messageStatus").setValue(Constants.MESSAGE_STATUS_DELIVERED);
                     }
+                    boolean atBottom = messageListRecyclerView.canScrollVertically(1);
                     messageArrayList.add(message);
                     updateLastMessageStatus(messageArrayList);
                     adapter.notifyDataSetChanged();
-                    messageList.scrollToPosition(messageList.getAdapter().getItemCount() - 1);
+
+                    if(!atBottom){
+                        /*at the bottom*/
+                        messageListRecyclerView.scrollToPosition(Objects.requireNonNull(messageListRecyclerView.getAdapter()).getItemCount() - 1);
+                    } else {
+//                        not at bottom.
+                        if(message.getSender().equals(myUid)){
+                            messageListRecyclerView.scrollToPosition(Objects.requireNonNull(messageListRecyclerView.getAdapter()).getItemCount() - 1);
+                        } else {
+                            unReadMessages++;
+                            newMessagesCounter.setText(unReadMessages + " new messages");
+                            if(newMessagesCounter.getVisibility() != View.VISIBLE){
+                                YoYo.with(Techniques.SlideInRight)
+                                        .onStart(new YoYo.AnimatorCallback() {
+                                            @Override
+                                            public void call(Animator animator) {
+                                                newMessagesCounter.setVisibility(View.VISIBLE);
+                                            }
+                                        })
+                                        .duration(300)
+                                        .playOn(newMessagesCounter);
+                            }
+                        }
+                    }
+
+
                 } catch (NullPointerException e){
                     e.printStackTrace();
                 }
@@ -457,7 +581,7 @@ public class MainActivity extends AppCompatActivity implements SettingsFragment.
     }
 
     private void startSettingsFragment() {
-        Fragment settingsFragment = new SettingsFragment();
+        Fragment settingsFragment = new ProfileFragment();
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         //fragmentTransaction.setCustomAnimations(R.anim.fragments_enter_animation, R.anim.fragments_exit_animation);

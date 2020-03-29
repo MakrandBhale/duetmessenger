@@ -1,6 +1,9 @@
 package com.makarand.duetmessenger.Fragments;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -10,11 +13,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -23,17 +29,26 @@ import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textview.MaterialTextView;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.makarand.duetmessenger.Helper.Constants;
 import com.makarand.duetmessenger.Helper.LocalStorage;
+import com.makarand.duetmessenger.Model.User;
 import com.makarand.duetmessenger.R;
 
 import com.theartofdev.edmodo.cropper.CropImage;
@@ -41,18 +56,19 @@ import com.theartofdev.edmodo.cropper.CropImageView;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 
 import id.zelory.compressor.Compressor;
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link SettingsFragment.OnFragmentInteractionListener} interface
+ * {@link ProfileFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link SettingsFragment#newInstance} factory method to
+ * Use the {@link ProfileFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class SettingsFragment extends Fragment {
+public class ProfileFragment extends Fragment {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -64,8 +80,9 @@ public class SettingsFragment extends Fragment {
     private ProgressBar loader;
     private ImageView avtarImageView;
     private OnFragmentInteractionListener mListener;
-
-    public SettingsFragment() {
+    private LinearLayout nameContainer, chatroomIdContainer;
+    private MaterialTextView nameTextView, chatroomIdTextView;
+    public ProfileFragment() {
         // Required empty public constructor
     }
 
@@ -78,8 +95,8 @@ public class SettingsFragment extends Fragment {
      * @return A new instance of fragment SettingsFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static SettingsFragment newInstance(String param1, String param2) {
-        SettingsFragment fragment = new SettingsFragment();
+    public static ProfileFragment newInstance(String param1, String param2) {
+        ProfileFragment fragment = new ProfileFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -100,41 +117,138 @@ public class SettingsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_settings, container, false);
+        View view = inflater.inflate(R.layout.fragment_profile, container, false);
 
         MaterialButton changeAvtarButton = view.findViewById(R.id.change_avtar_button);
         ImageButton closeButton = view.findViewById(R.id.close_button);
         closeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getActivity().onBackPressed();
+                Objects.requireNonNull(getActivity()).onBackPressed();
             }
         });
         avtarImageView = view.findViewById(R.id.avtar_imageview);
         loader = view.findViewById(R.id.loader);
+        chatroomIdContainer = view.findViewById(R.id.chatroom_id_container);
+        nameContainer = view.findViewById(R.id.name_container);
+        nameTextView = view.findViewById(R.id.name_text_view);
+        chatroomIdTextView = view.findViewById(R.id.chatroom_id_textview);
 
-
-        fetchAvtar();
+        fetchProfileInfo();
+        fetchAvtarFromLocalStorage();
         changeAvtarButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openDialog();
+                openImagePicker();
             }
         });
+
+        nameContainer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                openNameChangeDialog();
+            }
+        });
+
+        chatroomIdContainer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String chatroomId = chatroomIdTextView.getText().toString().trim();
+                if(chatroomId.length() > 0) {
+                    Intent sendIntent = new Intent();
+                    sendIntent.setAction(Intent.ACTION_SEND);
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, chatroomId);
+                    sendIntent.setType("text/plain");
+
+                    Intent shareIntent = Intent.createChooser(sendIntent, null);
+                    startActivity(shareIntent);
+
+                    /*ClipboardManager clipboard = (ClipboardManager) Objects.requireNonNull(getActivity()).getSystemService(Context.CLIPBOARD_SERVICE);
+                    ClipData clip = ClipData.newPlainText("chatroomId", chatroomId);
+                    assert clipboard != null;
+                    clipboard.setPrimaryClip(clip);
+                    Toast.makeText(getActivity(), "Chatroom Id copied to clipboard", Toast.LENGTH_LONG);*/
+                } else {
+                    Toast.makeText(getActivity(), "Failed to get chatroom id from server, please try again later.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        //getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
+
         return view;
     }
 
-    private void fetchAvtar() {
-        loader.setVisibility(View.VISIBLE);
-        LocalStorage localStorage = new LocalStorage(getActivity());
-        String photoURI = localStorage.getString(Constants.AVTAR_LOCAL_KEY);
+    private void openNameChangeDialog() {
+        MaterialAlertDialogBuilder dialog =  new MaterialAlertDialogBuilder(getActivity(), android.R.style.Theme_DeviceDefault_Light_Dialog_NoActionBar);
+        LayoutInflater li = LayoutInflater.from(getActivity());
+        View promptsView = li.inflate(R.layout.name_bottom_sheet_layout, null);
 
+        TextInputEditText editText = promptsView.findViewById(R.id.new_name_edittext);
+
+        dialog.setView(promptsView);
+        dialog.setPositiveButton("Done", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                String name = editText.getText().toString().trim();
+                String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                DatabaseReference myRef = FirebaseDatabase.getInstance().getReference(Constants.USERS_TREE + "/" + myUid + "/");
+                myRef.child("name").setValue(name)
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if(task.isSuccessful()){
+                                    Toast.makeText(getActivity(), "Name updated.", Toast.LENGTH_SHORT).show();
+                                    return;
+                                }
+                                Toast.makeText(getActivity(), "Failed to update name. Try again later.", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+            }
+        });
+
+
+        dialog.show();
+
+    }
+
+    private void fetchProfileInfo() {
+        String myUid = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
+        DatabaseReference myRef = FirebaseDatabase.getInstance().getReference(Constants.USERS_TREE + "/" + myUid);
+        myRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                User me = dataSnapshot.getValue(User.class);
+                if(me != null){
+                    if(me.getName() != null && me.getChatroomId() != null){
+                        nameTextView.setText(me.getName());
+                        chatroomIdTextView.setText(me.getChatroomId());
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void fetchAvtarFromLocalStorage() {
+        loader.setVisibility(View.VISIBLE);
+        LocalStorage localStorage = new LocalStorage(Objects.requireNonNull(getActivity()));
+        String photoURI = localStorage.getString(Constants.AVTAR_LOCAL_KEY);
+        if(photoURI == null){
+            /*No record of avtar url locally fetch from db*/
+            getAvtarUriFromDb();
+        }
         Glide
                 .with(getActivity())
                 .load(photoURI)
                 .addListener(new RequestListener<Drawable>() {
                     @Override
                     public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                        loader.setVisibility(View.GONE);
+                        Toast.makeText(getActivity(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                         return false;
                     }
 
@@ -165,6 +279,31 @@ public class SettingsFragment extends Fragment {
         });*/
     }
 
+    private void getAvtarUriFromDb() {
+        String myuid = FirebaseAuth.getInstance().getUid();
+        DatabaseReference myRef = FirebaseDatabase.getInstance().getReference(Constants.USERS_TREE + "/" + myuid);
+        myRef.child("avtar").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                String avtarUri = dataSnapshot.getValue(String.class);
+                if(avtarUri != null){
+                    LocalStorage localStorage = new LocalStorage(Objects.requireNonNull(getActivity()));
+                    localStorage.storeString(Constants.AVTAR_LOCAL_KEY, String.valueOf(avtarUri));
+                    fetchAvtarFromLocalStorage();
+                } else {
+                    /*user does not has a photo yet*/
+                    loader.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                loader.setVisibility(View.GONE);
+                Toast.makeText(getActivity(), "Some error occurred: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
@@ -186,7 +325,6 @@ public class SettingsFragment extends Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
-
         mListener = null;
     }
 
@@ -206,7 +344,7 @@ public class SettingsFragment extends Fragment {
     }
 
 
-    private void openDialog(){
+    private void openImagePicker(){
         CropImage.activity()
                 .setGuidelines(CropImageView.Guidelines.ON)
                 .setCropShape(CropImageView.CropShape.OVAL)
@@ -261,12 +399,12 @@ public class SettingsFragment extends Fragment {
                         storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                             @Override
                             public void onSuccess(Uri downloadUri) {
-                                //loader.setVisibility(View.GONE);
+                                loader.setVisibility(View.GONE);
                                 LocalStorage localStorage = new LocalStorage(getActivity());
                                 localStorage.storeString(Constants.AVTAR_LOCAL_KEY, String.valueOf(downloadUri));
                                 DatabaseReference myRef = FirebaseDatabase.getInstance().getReference(Constants.USERS_TREE + "/"+myUid+"/");
                                 myRef.child("avtar").setValue(String.valueOf(downloadUri));
-                                fetchAvtar();
+                                fetchAvtarFromLocalStorage();
                             }
                         });
 

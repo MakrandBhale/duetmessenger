@@ -59,14 +59,19 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
         if(currentMessage.getSender().equals(myUid)){
             if(currentMessage.isShowMessageStatus()){
                 Long arrivalTime =(Long) currentMessage.getArrivalTime();
-                if(arrivalTime != null){
+                Long seenTime = (Long) currentMessage.getSeenTime();
+                if(seenTime != null){
+                    /*Seen time exists means user saw the message, ignore all other times*/
+                    String messageSeenTime = currentMessage.getFormattedDate(seenTime);
+                    holder.showMessageStatus("Seen • " + messageSeenTime);
+                } else if(arrivalTime != null) {
+                    /* user has not really seen the message, but message has been delivered.*/
                     String deliveryTime = currentMessage.getFormattedDate(arrivalTime);
-                    holder.showMessageStatus(deliveryTime);
+                    holder.showMessageStatus("Delivered • " + deliveryTime);
                 } else {
+                    /*message has not yet been delivered. but sent to database.*/
                     holder.showMessageStatus(currentMessage.getMessageStatus());
                 }
-
-
             } else holder.hideMessageStatus();
         }
 

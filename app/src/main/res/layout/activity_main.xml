@@ -2,136 +2,103 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".MainActivity"
-    android:clipToPadding="false"
-    android:theme="@style/AppTheme"
-    android:id="@+id/rootView"
     android:background="@drawable/toolbar_gradient"
+    android:clipToPadding="false"
     android:fitsSystemWindows="true"
-    >
+    android:orientation="vertical"
+    android:theme="@style/AppTheme"
+    tools:context=".MainActivity">
 
     <FrameLayout
+        android:id="@+id/fragment_container_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/fragment_container_layout"
         android:background="@color/textPrimaryLight"
         android:visibility="gone"
-        app:elevation="2dp"
-        />
+        app:elevation="2dp" />
+
     <include
         android:id="@+id/toolbar"
-        layout="@layout/toolbar"
-        />
+        layout="@layout/toolbar" />
 
 
     <com.google.android.material.card.MaterialCardView
+        style="@style/CustomCardViewStyle"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        style="@style/CustomCardViewStyle"
         android:clipToPadding="false"
-        app:cardBackgroundColor="@color/primaryBackgroundDark"
-        app:cardPreventCornerOverlap="true"
         android:visibility="visible"
-        >
+        app:cardBackgroundColor="@color/primaryBackgroundDark"
+        app:cardPreventCornerOverlap="true">
 
         <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:background="@drawable/activity_background"
-        >
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/message_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_above="@id/bottom_bar"
-            android:layout_alignParentTop="true"
-            android:clipToPadding="false"
-            />
+            android:background="@drawable/activity_background"
+            android:orientation="vertical">
 
-
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/bottom_bar"
-            style="@style/CustomCardViewStyle"
-            app:cardElevation="1dp"
-            app:cardCornerRadius="28dp"
-            app:cardPreventCornerOverlap="true"
-            app:cardBackgroundColor="@color/primaryBackgroundLight"
-            android:layout_alignParentBottom="true"
-            android:layout_margin="4dp"
-            android:visibility="visible"
-            >
-            <LinearLayout
-                android:layout_margin="4dp"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/message_list"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:background="@drawable/messagebox_background"
+                android:layout_height="match_parent"
+                android:layout_above="@id/bottom_bar_include"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="-1dp"
+                android:layout_marginBottom="1dp"
+                android:clipToPadding="false"
+
+                />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:gravity="center_vertical"
-                android:orientation="horizontal"
+                android:id="@+id/go_down_button_container"
+                android:layout_alignParentEnd="true"
+                android:layout_above="@id/bottom_bar_include"
                 >
-                <ImageButton
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:padding="8dp"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/ic_emoji_24px"
-                    tools:ignore="ContentDescription"
-                    android:id="@+id/emojiButton"
-                    android:layout_marginStart="4dp"
-                    />
-                <com.vanniktech.emoji.EmojiEditText
-                    android:id="@+id/message_box"
-                    android:layout_width="0dp"
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_marginEnd="12dp"
-                    android:layout_weight="1"
-                    android:hint="Type a message..."
-                    android:imeOptions="actionSend"
-                    android:inputType="textMultiLine"
-                    android:maxLines="8"
-                    android:lines="8"
-                    android:textColor="@color/textPrimary"
-                    android:textColorHint="#868686"
-                    android:background="@null"
-                    android:ems="10"
-                    android:fontFamily="@font/regular"
-
+                    android:background="@drawable/badge_background"
+                    android:textColor="@color/textPrimaryLight"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:text="3 new messages"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp"
+                    android:elevation="1dp"
+                    android:visibility="gone"
+                    android:id="@+id/new_messages_counter"
                     />
-                <!--            <EditText
-                                android:id="@+id/message_box"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="12dp"
-                                android:layout_marginEnd="12dp"
-                                android:layout_weight="1"
-                                android:background="@null"
-                                android:hint="Type a message..."
-                                android:inputType="textMultiLine"
-                                android:maxLines="8"
-                                android:textColor="@color/textPrimary"
-                                android:textColorHint="#868686"
-                                />-->
-
-                <androidx.appcompat.widget.AppCompatImageButton
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
-                    android:padding="8dp"
-                    android:layout_marginEnd="4dp"
-                    android:background="@drawable/round_button"
-                    android:src="@drawable/ic_send_24px"
-                    android:id="@+id/send_button"
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/go_down_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="16dp"
+                    app:backgroundTint="#fff"
+                    app:elevation="2dp"
+                    app:fabSize="mini"
+                    app:srcCompat="@drawable/ic_arrow_downward_24px"
+                    app:useCompatPadding="false"
+                    android:visibility="gone"
                     />
+
             </LinearLayout>
-        </androidx.cardview.widget.CardView>
-    </RelativeLayout>
+
+            <include
+                android:id="@+id/bottom_bar_include"
+                layout="@layout/bottom_bar_main_activity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="4dp" />
+
+        </RelativeLayout>
 
     </com.google.android.material.card.MaterialCardView>
 

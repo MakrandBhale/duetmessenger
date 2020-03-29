@@ -20,6 +20,7 @@ public class Message {
     private Object timestamp;
     private Object arrivalTime;
     private String messageId;
+    private Object seenTime = null;
     @Exclude private boolean showMessageStatus = false;
 
     public Message(String messageId, String sender, String receiver, String message, int messageStatus) {
@@ -32,6 +33,14 @@ public class Message {
     }
 
     public Message() {
+    }
+
+    public Object getSeenTime() {
+        return seenTime;
+    }
+
+    public void setSeenTime(Object seenTime) {
+        this.seenTime = seenTime;
     }
 
     public Object getArrivalTime() {

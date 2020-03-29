@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/primaryBackgroundLight"
+    android:orientation="vertical"
+    tools:context=".Fragments.ProfileFragment">
+
+
+
+        <androidx.appcompat.widget.Toolbar
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/partner_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/bold"
+
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:text="Your Profile"
+                    android:textColor="@color/textPrimary"
+                    android:textSize="18sp" />
+
+                <androidx.appcompat.widget.AppCompatImageButton
+                    android:id="@+id/close_button"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="end|center_vertical"
+                    android:background="@drawable/circle_button_light"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_close_24px"
+                    android:layout_marginEnd="12dp"
+                    />
+        </androidx.appcompat.widget.Toolbar>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:background="#fff"
+            android:padding="8dp"
+            app:cardCornerRadius="84dp"
+            app:cardElevation="1dp"
+            app:cardUseCompatPadding="false">
+
+            <com.makeramen.roundedimageview.RoundedImageView
+                android:id="@+id/avtar_imageview"
+                android:layout_width="140dp"
+                android:layout_height="140dp"
+                android:layout_margin="4dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_user"
+                app:riv_mutate_background="true"
+                app:riv_oval="true" />
+
+            <ProgressBar
+                android:id="@+id/loader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/change_avtar_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/semibold"
+
+            android:text="Change Avtar" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:layout_marginTop="8dp"
+            android:fontFamily="@font/regular"
+            android:text="Name"
+            android:textColor="@color/textPrimary" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/accent_background_light"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingEnd="4dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            android:id="@+id/name_container"
+            >
+
+            <com.google.android.material.textview.MaterialTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:fontFamily="@font/semibold"
+                android:text="@string/makarand"
+                android:textColor="@color/textPrimary"
+                android:textSize="18sp"
+                android:id="@+id/name_text_view"
+                />
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:background="@null"
+                android:src="@drawable/ic_create_24px"
+                android:focusable="false"
+                android:clickable="false"
+                />
+        </LinearLayout>
+
+        <com.google.android.material.textview.MaterialTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:layout_marginTop="8dp"
+            android:fontFamily="@font/regular"
+            android:text="Chatroom ID"
+            android:textColor="@color/textPrimary" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/accent_background_light"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingEnd="4dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:id="@+id/chatroom_id_container"
+            >
+
+            <com.google.android.material.textview.MaterialTextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:fontFamily="@font/semibold"
+                android:textColor="@color/textPrimary"
+                android:textSize="18sp"
+                android:id="@+id/chatroom_id_textview"
+                />
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:background="@null"
+                android:src="@drawable/ic_share_24px"
+                android:focusable="false"
+                android:clickable="false"
+                />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

@@ -41,6 +41,8 @@
 
         <activity android:name=".MainActivity"
             android:theme="@style/AppTheme.TransparentTheme"
+            android:windowSoftInputMode="stateHidden|adjustResize"
+
             />
     </application>
 

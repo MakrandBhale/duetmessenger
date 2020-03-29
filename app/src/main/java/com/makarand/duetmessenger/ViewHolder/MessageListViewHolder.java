@@ -75,8 +75,7 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
 
     public void showMessageStatus(String status){
         messageStatusContainer.setVisibility(View.VISIBLE);
-
-        statusTextTextView.setText("Delivered • " + status);
+        statusTextTextView.setText(status);
     }
 
     public void showMessageStatus(int status) {
