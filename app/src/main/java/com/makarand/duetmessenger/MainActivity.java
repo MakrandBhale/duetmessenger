@@ -44,6 +44,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ServerValue;
 import com.google.firebase.database.ValueEventListener;
 import com.makarand.duetmessenger.Adapter.MessageListAdapter;
+import com.makarand.duetmessenger.Fragments.LoadingFragment;
 import com.makarand.duetmessenger.Fragments.ProfileFragment;
 import com.makarand.duetmessenger.Helper.Constants;
 import com.makarand.duetmessenger.Helper.LocalStorage;
@@ -74,8 +75,10 @@ public class MainActivity extends AppCompatActivity implements ProfileFragment.O
     Animation fadeIn, fadeOut;
     MessageListAdapter adapter;
     final ArrayList<Message> messageArrayList = new ArrayList<>();
+    final ArrayList<Message> partnerMessageArrayList = new ArrayList<>();
     EmojiPopup emojiPopup;
     LinearLayoutManager linearLayoutManager;
+    LocalStorage localStorage;
     int unReadMessages = 0;
     @BindView(R.id.partner_name) TextView partnerName;
     @BindView(R.id.status_text) TextView statusText;
@@ -83,7 +86,8 @@ public class MainActivity extends AppCompatActivity implements ProfileFragment.O
     @BindView(R.id.emojiButton) ImageButton emojiButton;
     @BindView(R.id.message_box) EmojiEditText messageBox;
     @BindView(R.id.partner_avtar) ImageView avtarImageView;
-    @BindView(R.id.message_list) RecyclerView messageListRecyclerView;
+    @BindView(R.id.message_list)
+    RecyclerView messageListRecyclerView;
     @BindView(R.id.rootView) LinearLayout rootView;
     @BindView(R.id.fragment_container_layout)FrameLayout fragmentContainer;
     @BindView(R.id.go_down_button) FloatingActionButton goDownButton;
@@ -99,13 +103,18 @@ public class MainActivity extends AppCompatActivity implements ProfileFragment.O
 
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         ButterKnife.bind(this);
+/*
+        startLoadingFragment();
+        setRecyclerViewListener();
+*/
+
         mAuth = FirebaseAuth.getInstance();
 
         emojiPopup = EmojiPopup.Builder.fromRootView(rootView)
                 .setOnEmojiPopupShownListener(() -> emojiButton.setImageResource(R.drawable.ic_keyboard_24px))
                 .setOnEmojiPopupDismissListener(() -> emojiButton.setImageResource(R.drawable.ic_emoji_24px))
-
                 .build(messageBox);
+
         fadeIn = AnimationUtils.loadAnimation(this, R.anim.fade_in);
         fadeOut = AnimationUtils.loadAnimation(this, R.anim.fade_out);
 
@@ -124,6 +133,7 @@ public class MainActivity extends AppCompatActivity implements ProfileFragment.O
 
             }
         });
+
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -141,21 +151,19 @@ public class MainActivity extends AppCompatActivity implements ProfileFragment.O
         messageListRecyclerView.setLayoutManager(linearLayoutManager);
         addSeenListener();
 
-        goDownButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                try{
-                    newMessagesCounter.setVisibility(View.GONE);
-                    messageListRecyclerView.scrollToPosition(Objects.requireNonNull(messageListRecyclerView.getAdapter()).getItemCount() - 1);
-                } catch (NullPointerException e){
-                    e.printStackTrace();
-                }
+        goDownButton.setOnClickListener(view -> {
+            try{
+                newMessagesCounter.setVisibility(View.GONE);
+                messageListRecyclerView.scrollToPosition(Objects.requireNonNull(messageListRecyclerView.getAdapter()).getItemCount() - 1);
+            } catch (NullPointerException e){
+                e.printStackTrace();
             }
         });
         /*Just for some time*/
         //startSettingsFragment();
         //fetchAvtar();
     }
+
 
     private void addSeenListener() {
         messageListRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -241,7 +249,6 @@ public class MainActivity extends AppCompatActivity implements ProfileFragment.O
     @OnClick(R.id.emojiButton)
     public void openEmojiPanel(View v){
         emojiPopup.toggle();
-
     }
 
     private void sendMessage(){
@@ -260,7 +267,7 @@ public class MainActivity extends AppCompatActivity implements ProfileFragment.O
             @Override
             public void onSuccess(Void aVoid) {
                 chatsRef.child(messageId).child("messageStatus").setValue(Constants.MESSAGE_STATUS_SENT);
-                messageListRecyclerView.getAdapter().notifyDataSetChanged();
+                //messageListRecyclerView.getAdapter().notifyDataSetChanged();
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -297,13 +304,20 @@ public class MainActivity extends AppCompatActivity implements ProfileFragment.O
     }
 
     private void init() {
-        addPartnerStatusListener();
-        handleMessageBox();
         fetchMessages();
+        handleMessageBox();
+        addPartnerStatusListener();
+    }
+
+    private Message getLastMessage(){
+        if(messageArrayList.size() > 0){
+            return messageArrayList.get(messageArrayList.size() - 1);
+        }
+        return null;
     }
 
     private void fetchMessages() {
-        adapter = new MessageListAdapter(getApplicationContext(), messageArrayList, myUid);
+        adapter = new MessageListAdapter(myUid,  getApplicationContext());
         messageListRecyclerView.setAdapter(adapter);
         chatsRef.keepSynced(true);
 //        TODO : get messages in set of 10, scroll to get more
@@ -327,14 +341,26 @@ public class MainActivity extends AppCompatActivity implements ProfileFragment.O
                                 //Toast.makeText(MainActivity.this, "updated", Toast.LENGTH_SHORT).show();
                             }
                         });
+
                         //messageRef.child("arrivalTime").setValue(ServerValue.TIMESTAMP);
                         //messageRef.child("messageStatus").setValue(Constants.MESSAGE_STATUS_DELIVERED);
                     }
-                    boolean atBottom = messageListRecyclerView.canScrollVertically(1);
+                    /*Message top = getLastMessage();
+                    if(top != null){
+                        if(top.getMessageStatus() == message.getMessageStatus()){
+                            top.setShowMessageStatus(false);
+                        } else {
+                            top.setShowMessageStatus(true);
+                        }
+                        adapter.notifyItemChanged(messageArrayList.size() - 1);
+                    }
+                    message.setShowMessageStatus(true);*/
                     messageArrayList.add(message);
-                    updateLastMessageStatus(messageArrayList);
-                    adapter.notifyDataSetChanged();
+                    //updateLastMessageStatus(messageArrayList);
 
+                    adapter.notifyItemInserted(messageArrayList.indexOf(message));
+
+                    boolean atBottom = messageListRecyclerView.canScrollVertically(1);
                     if(!atBottom){
                         /*at the bottom*/
                         messageListRecyclerView.scrollToPosition(Objects.requireNonNull(messageListRecyclerView.getAdapter()).getItemCount() - 1);
@@ -358,13 +384,9 @@ public class MainActivity extends AppCompatActivity implements ProfileFragment.O
                             }
                         }
                     }
-
-
                 } catch (NullPointerException e){
                     e.printStackTrace();
                 }
-
-
                 /*TODO: Go to new Message if you are already at end of list.*/
             }
 
@@ -372,19 +394,33 @@ public class MainActivity extends AppCompatActivity implements ProfileFragment.O
             public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 Message messageToBeUpdated = dataSnapshot.getValue(Message.class);
                 int indexOf = messageArrayList.indexOf(messageToBeUpdated);
-                if(indexOf >= 0)
+                //updateMessageStatus(messageToBeUpdated);
+                /*messageToBeUpdated.setShowMessageStatus(true);
+                if(messageArrayList.size() > 1){
+                    *//*its not last item*//*
+                    Message prev = messageArrayList.get(indexOf - 1);
+                    if(messageToBeUpdated.getMessageStatus() == prev.getMessageStatus()){
+                        prev.setShowMessageStatus(false);
+                        adapter.notifyItemChanged(indexOf - 1);
+                    }
+                }*/
+                if(indexOf >= 0){
                     messageArrayList.set(indexOf, messageToBeUpdated);
-                updateLastMessageStatus(messageArrayList);
+                }
 
-                adapter.notifyDataSetChanged();
+
+                //updateLastMessageStatus(messageArrayList);
+
+                adapter.notifyItemChanged(indexOf);
             }
 
             @Override
             public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
                 //Boolean exists0 = messageArrayList.contains(dataSnapshot.getValue(Message.class));
-                messageArrayList.remove(dataSnapshot.getValue(Message.class));
+                Message message = dataSnapshot.getValue(Message.class);
+                messageArrayList.remove(message);
                 //Boolean exists = messageArrayList.contains(dataSnapshot.getValue(Message.class));
-                adapter.notifyDataSetChanged();
+                adapter.notifyItemRemoved(messageArrayList.indexOf(message));
             }
 
             @Override
@@ -397,6 +433,8 @@ public class MainActivity extends AppCompatActivity implements ProfileFragment.O
 
             }
         });
+
+
     }
 
     private void updateLastMessageStatus(ArrayList<Message> messageArrayList) {
@@ -482,7 +520,7 @@ public class MainActivity extends AppCompatActivity implements ProfileFragment.O
         chatroomRef= FirebaseDatabase.getInstance().getReference(Constants.CHATROOMS_TREE).child(user.getChatroomId());
         coupleRef = chatroomRef.child("couple");
         chatsRef = chatroomRef.child("chats");
-        //chatsRef.keepSynced(true);
+        chatsRef.keepSynced(true);
         coupleRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -515,6 +553,7 @@ public class MainActivity extends AppCompatActivity implements ProfileFragment.O
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 try{
+
                     partner = dataSnapshot.getValue(User.class);
                     partnerName.setText(partner.getName());
                     init();
@@ -590,6 +629,31 @@ public class MainActivity extends AppCompatActivity implements ProfileFragment.O
         fragmentContainer.setVisibility(View.VISIBLE);
         fragmentTransaction.addToBackStack("SettingsFragment");
         fragmentTransaction.commit();
+    }
+
+    private void startLoadingFragment(){
+        Fragment loadingFragment = new LoadingFragment();
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        //fragmentTransaction.setCustomAnimations(R.anim.fragments_enter_animation, R.anim.fragments_exit_animation);
+
+        fragmentTransaction.add(R.id.fragment_container_layout, loadingFragment, "LoadingFragment");
+        fragmentContainer.setVisibility(View.VISIBLE);
+        fragmentTransaction.addToBackStack("LoadingFragment");
+        fragmentTransaction.commit();
+    }
+
+    private void removeLoadingFragment(){
+        if(getSupportFragmentManager().getBackStackEntryCount() > 0){
+            getSupportFragmentManager().popBackStack();
+            fragmentContainer.setVisibility(View.GONE);
+/*            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+
+                }
+            }, 300);*/
+        }
     }
 
     @Override

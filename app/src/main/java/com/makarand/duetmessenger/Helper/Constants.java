@@ -9,10 +9,22 @@ public class Constants {
     public static final int ONLINE = 0;
     public static final int OFFLINE = -1;
     public static final int TYPING = 1;
+    public static final int TYPING_TIMEOUT = 1;
+
+    public static final String TYPING_MESSAGE_TYPE = "typing";
 
     public static final int MESSAGE_STATUS_SENDING = -2;
     public static final int MESSAGE_STATUS_SENT = -1;
     public static final int MESSAGE_STATUS_DELIVERED = 0;
     public static final int MESSAGE_STATUS_READ = 1;
     public static final long LATE_REPLY_TIMEOUT = 1;
+    public static final int MESSAGE_LIMIT = 10;
+    public static final String MY_OBJECT_LOCAL_STORAGE = "my_object";
+    public static final String PARTNER_OBJECT_LOCAL_STORAGE = "partner_object";
+    public static final String COUPLE_OBJECT_LOCAL_STORAGE = "couple_object";
+    public static final String FREE_PASS = "free_pass";
+
+    public static final int NORMAL_MESSAGE = 0;
+    public static final int TYPING_MESSAGE = 1;
+
 }

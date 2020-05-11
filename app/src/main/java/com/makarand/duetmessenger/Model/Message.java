@@ -3,6 +3,9 @@ package com.makarand.duetmessenger.Model;
 
 import android.text.format.DateFormat;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
+
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
 import com.google.firebase.database.ServerValue;
@@ -22,7 +25,17 @@ public class Message {
     private String messageId;
     private Object seenTime = null;
     @Exclude private boolean showMessageStatus = false;
-
+    @Exclude private int messageType = Constants.NORMAL_MESSAGE;
+    public Message(boolean TYPING){
+        if(TYPING){
+            this.sender = "";
+            this.receiver = "";
+            this.message = "";
+            this.messageStatus = 0;
+            this.timestamp = null;
+            this.messageId = Constants.TYPING_MESSAGE_TYPE;
+        }
+    }
     public Message(String messageId, String sender, String receiver, String message, int messageStatus) {
         this.sender = sender;
         this.receiver = receiver;
@@ -31,6 +44,7 @@ public class Message {
         this.timestamp = ServerValue.TIMESTAMP;
         this.messageId = messageId;
     }
+
 
     public Message() {
     }
@@ -109,6 +123,20 @@ public class Message {
         this.showMessageStatus = showMessageStatusb;
     }
 
+    @Exclude
+    public int getMessageType() {
+        return messageType;
+    }
+
+    @Exclude
+    public void setMessageType(int messageType) {
+        this.messageType = messageType;
+    }
+
+    @Exclude
+    public boolean getShowMessageStatus(){
+        return this.showMessageStatus;
+    }
     @Exclude
     private long getMessageTimestamp(){
         return (Long) timestamp;
@@ -222,15 +250,43 @@ public class Message {
     }
 */
 
+
+
     @Exclude
     @Override
     public boolean equals(Object otherObject){
-        if(otherObject instanceof Message){
-            Message otherMessage = (Message) otherObject;
-            return this.getMessageId().equals(otherMessage.getMessageId());
-            /*Same Message*/
+        if(!(otherObject instanceof Message)){
+            return false;
         }
-        return false;
+        Message otherMessage = (Message) otherObject;
+
+//        if(!this.sender.equals(otherMessage.getSender())){
+//            return false;
+//        }
+//        if(!this.receiver.equals(otherMessage.getReceiver())){
+//            return false;
+//        }
+//        if(!this.message.equals(otherMessage.getMessage())){
+//            return false;
+//        }
+//        if(!(this.messageStatus == otherMessage.getMessageStatus())){
+//            return false;
+//        }
+//        if(!(this.timestamp  == otherMessage.getTimestamp())){
+//            return false;
+//        }
+//        if(!(this.arrivalTime  == otherMessage.getArrivalTime())){
+//            return false;
+//        }
+//        if(!(this.seenTime  == otherMessage.getSeenTime())){
+//            return false;
+//        }
+
+        return this.getMessageId().equals(otherMessage.getMessageId());
+            /*Same Message*/
     }
+
+
+
 }
 

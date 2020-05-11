@@ -14,17 +14,20 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.makarand.duetmessenger.Helper.Constants;
+import com.makarand.duetmessenger.Helper.LocalStorage;
 import com.makarand.duetmessenger.Model.Couple;
 
 public class WaitActivity extends AppCompatActivity {
     DatabaseReference coupleRef;
     String chatroomId;
+    LocalStorage localStorage;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_wait);
         FirebaseAuth mAuth = FirebaseAuth.getInstance();
         Intent i = getIntent();
+        localStorage = new LocalStorage(this);
         try{
             chatroomId = i.getExtras().getString("chatroomId");
         } catch (NullPointerException e){
@@ -39,9 +42,11 @@ public class WaitActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 Couple couple = dataSnapshot.getValue(Couple.class);
+
                 if(dataSnapshot.hasChild("p1") && dataSnapshot.hasChild("p2")){
                     // both partner exist, proceed.
-                    startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                    localStorage.setCoupleObject(Constants.COUPLE_OBJECT_LOCAL_STORAGE, couple);
+                    startActivity(new Intent(getApplicationContext(), ChatsActivity.class));
                     finish();
                 }
             }

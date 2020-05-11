@@ -1,7 +1,5 @@
 package com.makarand.duetmessenger.Fragments;
 
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -13,11 +11,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -288,7 +284,7 @@ public class ProfileFragment extends Fragment {
                 String avtarUri = dataSnapshot.getValue(String.class);
                 if(avtarUri != null){
                     LocalStorage localStorage = new LocalStorage(Objects.requireNonNull(getActivity()));
-                    localStorage.storeString(Constants.AVTAR_LOCAL_KEY, String.valueOf(avtarUri));
+                    localStorage.setString(Constants.AVTAR_LOCAL_KEY, String.valueOf(avtarUri));
                     fetchAvtarFromLocalStorage();
                 } else {
                     /*user does not has a photo yet*/
@@ -401,7 +397,7 @@ public class ProfileFragment extends Fragment {
                             public void onSuccess(Uri downloadUri) {
                                 loader.setVisibility(View.GONE);
                                 LocalStorage localStorage = new LocalStorage(getActivity());
-                                localStorage.storeString(Constants.AVTAR_LOCAL_KEY, String.valueOf(downloadUri));
+                                localStorage.setString(Constants.AVTAR_LOCAL_KEY, String.valueOf(downloadUri));
                                 DatabaseReference myRef = FirebaseDatabase.getInstance().getReference(Constants.USERS_TREE + "/"+myUid+"/");
                                 myRef.child("avtar").setValue(String.valueOf(downloadUri));
                                 fetchAvtarFromLocalStorage();

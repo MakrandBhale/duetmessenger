@@ -22,6 +22,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.makarand.duetmessenger.Helper.Constants;
+import com.makarand.duetmessenger.Helper.LocalStorage;
 import com.makarand.duetmessenger.Model.User;
 
 import butterknife.BindView;
@@ -80,6 +81,7 @@ public class SignupActivity extends AppCompatActivity {
                                     @Override
                                     public void onSuccess(Void aVoid) {
                                         if(user.getChatroomId() == null){
+                                            new LocalStorage(getApplicationContext()).setUserObject(Constants.MY_OBJECT_LOCAL_STORAGE, user);
                                             startActivity(new Intent(getApplicationContext(), CreateChatroom.class));
                                             finish();
                                         }

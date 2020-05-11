@@ -1,7 +1,7 @@
 package com.makarand.duetmessenger.Model;
 
 public class Couple {
-    String p1, p2;
+    private String p1 = null, p2 = null;
 
     public Couple(String p1, String p2) {
         this.p1 = p1;

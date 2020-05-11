@@ -11,11 +11,13 @@
         <item name="textAppearanceButton">@style/TextAppearance.App.Button</item>
         <item name="textAppearanceSubtitle1">@style/TextAppearance.App.Subtitle1</item>
         <item name="textAppearanceCaption">@style/TextAppearance.App.Caption</item>
-        <item name="android:fontFamily">@font/regular</item>
-        <item name="fontFamily">@font/regular</item>
-<!--        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.App.TextInputLayout</item>-->
-<!--        <item name="android:statusBarColor" tools:targetApi="lollipop">@color/textPrimaryLight</item>
-        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>-->
+<!--
+        <item name="android:fontFamily">@font/circular</item>
+-->
+        <!--<item name="fontFamily">@font/circular</item>-->
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.App.TextInputLayout</item>
+        <item name="android:statusBarColor" tools:targetApi="lollipop">@color/textPrimaryLight</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
 
     </style>
 
@@ -38,18 +40,18 @@
     </style>
 
     <style name="TextAppearance.App.Button" parent="TextAppearance.MaterialComponents.Button">
-        <item name="fontFamily">@font/regular</item>
-        <item name="android:fontFamily">@font/regular</item>
+        <item name="fontFamily">@font/circular</item>
+        <item name="android:fontFamily">@font/circular</item>
     </style>
 
     <style name="TextAppearance.App.Subtitle1" parent="TextAppearance.MaterialComponents.Subtitle1">
-        <item name="fontFamily">@font/regular</item>
-        <item name="android:fontFamily">@font/regular</item>
+        <item name="fontFamily">@font/circular</item>
+        <item name="android:fontFamily">@font/circular</item>
     </style>
 
     <style name="TextAppearance.App.Caption" parent="TextAppearance.MaterialComponents.Caption">
-        <item name="fontFamily">@font/regular</item>
-        <item name="android:fontFamily">@font/regular</item>
+        <item name="fontFamily">@font/circular</item>
+        <item name="android:fontFamily">@font/circular</item>
     </style>
 
     <style name="AppTheme.TransparentTheme">

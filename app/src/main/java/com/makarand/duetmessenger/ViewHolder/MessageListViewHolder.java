@@ -1,5 +1,6 @@
 package com.makarand.duetmessenger.ViewHolder;
 
+import android.animation.Animator;
 import android.graphics.LinearGradient;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -28,6 +29,7 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
     //private LinearLayout messageBubble;
     private LinearLayout timeDateContainer;
     private LinearLayout messageStatusContainer;
+    private LinearLayout typingIndicatorContainer;
     private View view;
 
     public MessageListViewHolder(@NotNull View view){
@@ -39,6 +41,8 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
         timeDateContainer = view.findViewById(R.id.date_time_container);
         messageStatusContainer = view.findViewById(R.id.message_status_container);
         statusTextTextView = view.findViewById(R.id.message_status_text);
+        typingIndicatorContainer = view.findViewById(R.id.typing_indicator_container);
+
     }
 
     public void setMessageText(String message){
@@ -77,23 +81,21 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
         messageStatusContainer.setVisibility(View.VISIBLE);
         statusTextTextView.setText(status);
     }
-
     public void showMessageStatus(int status) {
-        messageStatusContainer.setVisibility(View.VISIBLE);
         String statusText="";
         switch (status){
             case Constants.MESSAGE_STATUS_SENDING:
-                statusTextTextView.setText("Sending");
+                //messageStatusContainer.setVisibility(View.VISIBLE);
+                //statusTextTextView.setText("Sending");
                 break;
             case Constants.MESSAGE_STATUS_SENT:
                 statusTextTextView.setText("Sent");
+                messageStatusContainer.setVisibility(View.VISIBLE);
+
                 break;
         }
     }
-
     public void hideMessageStatus() {
         messageStatusContainer.setVisibility(View.GONE);
     }
-
-
 }

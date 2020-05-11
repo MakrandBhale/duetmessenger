@@ -13,17 +13,24 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.makarand.duetmessenger.Helper.Constants;
+import com.makarand.duetmessenger.Helper.LocalStorage;
 import com.makarand.duetmessenger.Model.Couple;
 import com.makarand.duetmessenger.Model.User;
 
 public class SplashActivity extends AppCompatActivity {
     FirebaseAuth mAuth;
+    LocalStorage localStorage;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
         mAuth = FirebaseAuth.getInstance();
-
+        localStorage = new LocalStorage(this);
+        if(localStorage.getBoolean(Constants.FREE_PASS)) {
+            moveToMainActivity();
+            return;
+            //startActivity(new Intent(this, MainActivity.class)); return;
+        }
         if(mAuth.getCurrentUser() != null){
             DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference(Constants.USERS_TREE + "/" + mAuth.getCurrentUser().getUid());
             dbRef.keepSynced(true);
@@ -33,28 +40,43 @@ public class SplashActivity extends AppCompatActivity {
             startActivity(new Intent(this, LoginActivity.class));
             finish();
         }
+
+
     }
 
 
     private void checkIfIdExists(DatabaseReference dbRef) {
+        User myObj = localStorage.getUserObject(Constants.MY_OBJECT_LOCAL_STORAGE);
+        Couple coupleObj = localStorage.getCoupleObject(Constants.COUPLE_OBJECT_LOCAL_STORAGE);
+        if(myObj != null && coupleObj != null){
+            if(coupleObj.getP1() != null && coupleObj.getP2() != null) {
+                moveToMainActivity();
+                return;
+            }
+            moveToWaitActivity(myObj);
+            return;
+        }
+
         dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 User user = dataSnapshot.getValue(User.class);
+                if(user == null) return;
+                localStorage.setUserObject(Constants.MY_OBJECT_LOCAL_STORAGE, user);
                 if(dataSnapshot.hasChild("chatroomId")){
                     //user registered chatroom exists.
-                    DatabaseReference chatroomRef = FirebaseDatabase.getInstance().getReference(Constants.CHATROOMS_TREE).child(user.getChatroomId()).child("couple");
-                    chatroomRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    DatabaseReference coupleRef = FirebaseDatabase.getInstance().getReference(Constants.CHATROOMS_TREE).child(user.getChatroomId()).child("couple");
+                    coupleRef.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
-                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        public void onDataChange(@NonNull DataSnapshot dataSnadapshot) {
+                            Couple c = dataSnapshot.getValue(Couple.class);
+                            if(c != null){
+                                localStorage.setCoupleObject(Constants.COUPLE_OBJECT_LOCAL_STORAGE, c);
+                            }
                             if(dataSnapshot.hasChild("p1") && dataSnapshot.hasChild("p2")){
-                                Couple c = dataSnapshot.getValue(Couple.class);
-                                startActivity(new Intent(getApplicationContext(), MainActivity.class));
-                                finish();
+                                moveToMainActivity();
                             } else {
-                                Intent i = new Intent(getApplicationContext(), WaitActivity.class);
-                                i.putExtra("chatroomId", user.getChatroomId());
-                                startActivity(i);
+                                moveToWaitActivity(user);
                             }
                         }
                         @Override
@@ -75,5 +97,18 @@ public class SplashActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    private void moveToWaitActivity(User user) {
+        Intent i = new Intent(getApplicationContext(), WaitActivity.class);
+        i.putExtra("chatroomId", user.getChatroomId());
+        startActivity(i);
+        finish();
+    }
+
+    private void moveToMainActivity() {
+        startActivity(new Intent(getApplicationContext(), ChatsActivity.class));
+        //startActivity(new Intent(getApplicationContext(), MainActivity.class));
+        finish();
     }
 }

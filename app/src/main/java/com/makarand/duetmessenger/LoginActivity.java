@@ -21,6 +21,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.makarand.duetmessenger.Helper.Constants;
+import com.makarand.duetmessenger.Helper.LocalStorage;
 import com.makarand.duetmessenger.Model.User;
 
 import butterknife.BindView;
@@ -33,6 +34,7 @@ public class LoginActivity extends AppCompatActivity {
     @BindView(R.id.register_textview)
     TextView goToRegister;
     FirebaseAuth auth ;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,6 +78,7 @@ public class LoginActivity extends AppCompatActivity {
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
                                 User user = dataSnapshot.getValue(User.class);
+                                new LocalStorage(getApplicationContext()).setUserObject(Constants.MY_OBJECT_LOCAL_STORAGE, user);
                                 dbRef.keepSynced(true);
                                 Toast.makeText(LoginActivity.this, "Login Successful.", Toast.LENGTH_SHORT).show();
                                 Intent i = new Intent(getApplicationContext(), WaitActivity.class);
