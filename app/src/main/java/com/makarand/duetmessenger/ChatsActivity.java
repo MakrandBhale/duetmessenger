@@ -3,6 +3,10 @@ package com.makarand.duetmessenger;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatImageButton;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -10,28 +14,37 @@ import androidx.recyclerview.widget.SimpleItemAnimator;
 
 import android.animation.Animator;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.card.MaterialCardView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ServerValue;
+import com.google.gson.internal.$Gson$Preconditions;
 import com.makarand.duetmessenger.Adapter.MessageListAdapter;
+import com.makarand.duetmessenger.Fragments.LoadingFragment;
+import com.makarand.duetmessenger.Fragments.MessageBubbleEffectPreviewFragment;
+import com.makarand.duetmessenger.Fragments.ProfileFragment;
 import com.makarand.duetmessenger.Model.Message;
 import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -46,11 +59,15 @@ import com.makarand.duetmessenger.Helper.LocalStorage;
 import com.makarand.duetmessenger.Model.Couple;
 import com.makarand.duetmessenger.Model.TypingMessage;
 import com.makarand.duetmessenger.Model.User;
+import com.theartofdev.edmodo.cropper.CropImage;
 import com.vanniktech.emoji.EmojiEditText;
 import com.vanniktech.emoji.EmojiManager;
+import com.vanniktech.emoji.EmojiPopup;
 import com.vanniktech.emoji.ios.IosEmojiProvider;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Objects;
 
 import java.util.concurrent.TimeUnit;
@@ -58,8 +75,9 @@ import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
-public class ChatsActivity extends AppCompatActivity {
+public class ChatsActivity extends AppCompatActivity implements ProfileFragment.OnFragmentInteractionListener, MessageBubbleEffectPreviewFragment.OnFragmentInteractionListener{
     @BindView(R.id.partner_name)
     TextView partnerName;
 
@@ -85,6 +103,14 @@ public class ChatsActivity extends AppCompatActivity {
     MaterialTextView newMessagesCounter;
     @BindView(R.id.green_online_dot) ImageView greenOnlineDot;
     @BindView(R.id.status_text) MaterialTextView onlineStatusTextView;
+    @BindView(R.id.loadingCardViewLayout)
+    MaterialCardView loadingCardViewLayout;
+    @BindView(R.id.media_buttons_container)
+            LinearLayout mediaButtonsContainer;
+    @BindView(R.id.typing_container) LinearLayout includeTypingIndicatorContainer;
+    @BindView(R.id.typing_partner_name) TextView typing_partner_name;
+    @BindView(R.id.show_media_control_buttons)
+    AppCompatImageButton show_media_control_buttons;
 
     LocalStorage localStorage;
     User me, partner;
@@ -100,13 +126,18 @@ public class ChatsActivity extends AppCompatActivity {
     FirebaseAuth mAuth;
     int typingIndicatorIndex;
     private int typingMessageIndex = 0;
-
+    String lastMessageKey = null;
+    boolean fetchingOldMessage = false;
+    EmojiPopup emojiPopup;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EmojiManager.install(new IosEmojiProvider());
         setContentView(R.layout.activity_chats);
         ButterKnife.bind(this);
+        MaterialToolbar myToolbar = findViewById(R.id.my_toolbar);
+        setSupportActionBar(myToolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
         mAuth = FirebaseAuth.getInstance();
         localStorage = new LocalStorage(this);
         me = localStorage.getUserObject(Constants.MY_OBJECT_LOCAL_STORAGE);
@@ -133,7 +164,11 @@ public class ChatsActivity extends AppCompatActivity {
                 YoYo.with(Techniques.Pulse)
                         .duration(250)
                         .playOn(sendButton);
-                sendMessage();
+                //fetchOldMessage();
+                sendMessage(-1);
+                if(emojiPopup.isShowing()){
+                    emojiPopup.toggle();
+                }
             }
         });
         goDownButton.setOnClickListener(view -> {
@@ -144,23 +179,133 @@ public class ChatsActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         });
-        fetchMessages();
+        fetchNewMessages();
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
-                //addSeenListener();
+                addSeenListener();
             }
         });
         setupMyTypingListener();
+
+        show_media_control_buttons.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                show_media_control_buttons.setVisibility(View.GONE);
+                mediaButtonsContainer.setVisibility(View.VISIBLE);
+            }
+        });
+
+        emojiPopup = EmojiPopup.Builder.fromRootView(rootView)
+                .setOnEmojiPopupShownListener(() -> emojiButton.setImageResource(R.drawable.ic_keyboard_24px))
+                .setOnEmojiPopupDismissListener(() -> emojiButton.setImageResource(R.drawable.ic_emoji_24px))
+                .build(messageBox);
+
+        //typingIndicatorContainer = findViewById(R.id.typing_container);
         //setupPartnerListener();
+        sendButton.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                if(Objects.requireNonNull(messageBox.getText()).length() > 0)
+                    startBubbleEffectFragment();
+                else return false;
+                return true;
+            }
+        });
+
+    }
+    @OnClick(R.id.emojiButton)
+    public void openEmojiPanel(View v){
+        emojiPopup.toggle();
     }
 
 
-    private void fetchMessages() {
-        chatsRef.addChildEventListener(new ChildEventListener() {
+    private void showLoading(){
+        fetchingOldMessage = true;
+        YoYo.with(Techniques.SlideInDown)
+                .duration(300)
+                .onStart(new YoYo.AnimatorCallback() {
+                    @Override
+                    public void call(Animator animator) {
+                        loadingCardViewLayout.setVisibility(View.VISIBLE);
+                    }
+                })
+                .playOn(loadingCardViewLayout);
+
+    }
+
+    private void hideLoading(){
+        fetchingOldMessage = false;
+        YoYo.with(Techniques.SlideOutUp)
+                .duration(300)
+                .onEnd(new YoYo.AnimatorCallback() {
+                    @Override
+                    public void call(Animator animator) {
+                        loadingCardViewLayout.setVisibility(View.GONE);
+                    }
+                })
+                .playOn(loadingCardViewLayout);
+
+    }
+    private void fetchOldMessage(){
+        if(lastMessageKey == null){
+            //fetchNewMessages();
+            return;
+        }
+
+        if(fetchingOldMessage) return;
+        showLoading();
+        Query query = chatsRef.orderByKey()
+                .endAt(lastMessageKey)
+                .limitToLast(Constants.MESSAGE_LIMIT);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                ArrayList<Message> temp = new ArrayList<>();
+                for(DataSnapshot snapshot : dataSnapshot.getChildren()){
+                    Message message = snapshot.getValue(Message.class);
+                    temp.add(message);
+                }
+                lastMessageKey = temp.get(0).getMessageId();
+                //temp.remove(temp.size() - 1);
+                Collections.reverse(temp);
+                for(int i = 0; i < temp.size() -1;i++){
+                    if(temp.get(i).getMessageStatus() != temp.get(i+1).getMessageStatus()){
+                        temp.get(i).setShowMessageStatus(true);
+                    }
+                }
+
+                for(int i = 1;i < temp.size(); i++){
+                    adapter.addOldMessage(temp.get(i));
+                }
+
+                hideLoading();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                hideLoading();
+            }
+        });
+
+    }
+    private void fetchNewMessages() {
+        Query query = chatsRef.orderByKey().limitToLast(Constants.MESSAGE_LIMIT);
+
+        query.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 Message message = dataSnapshot.getValue(Message.class);
+
+                if(lastMessageKey == null)
+                    lastMessageKey = dataSnapshot.getKey();
+                if(message.getSender().equals(partnerUid) && !dataSnapshot.hasChild("arrivalTime")) {
+                    DatabaseReference messageRef = chatsRef.child(dataSnapshot.getKey());
+                    HashMap<String, Object> messageStatusUpdate = new HashMap<>();
+                    //messageStatusUpdate.put("arrivalTime", ServerValue.TIMESTAMP);
+                    //messageStatusUpdate.put("messageStatus", Constants.MESSAGE_STATUS_DELIVERED);
+                    messageRef.child("arrivalTime").setValue(ServerValue.TIMESTAMP);
+                }
                 message.setShowMessageStatus(true);
                 //messageArrayList.add(message);
                 adapter.addNewMessage(message);
@@ -246,7 +391,7 @@ public class ChatsActivity extends AppCompatActivity {
     }
 
 
-    private void sendMessage() {
+    private void sendMessage(int technique) {
         if (messageBox.getText() == null) return;
         myRef.child("online").setValue(Constants.ONLINE);
         String messageText = messageBox.getText().toString().trim();
@@ -255,7 +400,12 @@ public class ChatsActivity extends AppCompatActivity {
             return;
         messageBox.setText("");
         String messageId = chatsRef.push().getKey();
-        Message message = new Message(messageId, myUid, partnerUid, messageText, Constants.MESSAGE_STATUS_SENDING);
+        Message message;
+        if(technique == -1)
+            message = new Message(messageId, myUid, partnerUid, messageText, Constants.MESSAGE_STATUS_SENDING);
+        else {
+            message = new Message(messageId, myUid, partnerUid, messageText, Constants.MESSAGE_STATUS_SENDING, technique);
+        }
         messageListRecyclerView.scrollToPosition(messageListRecyclerView.getAdapter().getItemCount() - 1);
 
 
@@ -264,6 +414,7 @@ public class ChatsActivity extends AppCompatActivity {
             public void onSuccess(Void aVoid) {
                 chatsRef.child(messageId).child("messageStatus").setValue(Constants.MESSAGE_STATUS_SENT);
                 //messageListRecyclerView.getAdapter().notifyDataSetChanged();
+
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -276,6 +427,7 @@ public class ChatsActivity extends AppCompatActivity {
 
     private void setPartnerProfileInfo(User partner) {
         partnerName.setText(partner.getName());
+        typing_partner_name.setText(partner.getName());
         Glide
                 .with(getApplicationContext())
                 .load(partner.getAvtar())
@@ -357,19 +509,15 @@ public class ChatsActivity extends AppCompatActivity {
                 switch (partner.getOnline()) {
                     case Constants.TYPING:
                         showOnlineIndicator();
-
-                        TypingMessage typingMessage = new TypingMessage(partner.getAvtar());
-                        adapter.showTypingIndicator(typingMessage);
-                        if (!messageListRecyclerView.canScrollVertically(1)) {
-                            scrollToBottom();
-                        }
+                        showTypingIndicator();
                         break;
                     case Constants.ONLINE:
                         showOnlineIndicator();
-                        adapter.hideTypingIndicator();
+                        hideTypingIndicator();
                         break;
                     case Constants.OFFLINE:
                         hideOnlineIndicator();
+                        hideTypingIndicator();
                         //Toast.makeText(ChatsActivity.this, "offline", Toast.LENGTH_SHORT).show();
                         break;
                 }
@@ -382,6 +530,32 @@ public class ChatsActivity extends AppCompatActivity {
         });
     }
 
+    private void showTypingIndicator() {
+        YoYo.with(Techniques.SlideInUp)
+                .duration(600)
+                .onStart(new YoYo.AnimatorCallback() {
+                    @Override
+                    public void call(Animator animator) {
+                        includeTypingIndicatorContainer.setVisibility(View.VISIBLE);
+                    }
+                })
+                .playOn(includeTypingIndicatorContainer);
+    }
+
+    private void hideTypingIndicator() {
+        YoYo.with(Techniques.SlideOutDown)
+                .duration(300)
+                .onEnd(new YoYo.AnimatorCallback() {
+                    @Override
+                    public void call(Animator animator) {
+                        includeTypingIndicatorContainer.setVisibility(View.GONE);
+                    }
+                })
+                .playOn(includeTypingIndicatorContainer);
+
+    }
+
+
     private void addSeenListener() {
         messageListRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -392,11 +566,16 @@ public class ChatsActivity extends AppCompatActivity {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
+
                 int firstVisibleMessage = linearLayoutManager.findFirstCompletelyVisibleItemPosition();
                 int lastVisibleMessage = linearLayoutManager.findLastCompletelyVisibleItemPosition();
+
+                if(firstVisibleMessage <= Constants.REQUEST_OLD_MESSAGES_OFFSET){
+                    fetchOldMessage();
+                }
                 ArrayList<Message> visibleMessagesArrayList = new ArrayList<>();
                 for (int i = firstVisibleMessage; i <= lastVisibleMessage; i++) {
-                    if (messageArrayList.size() > lastVisibleMessage && messageArrayList.get(i).getSeenTime() == null) {
+                    if (firstVisibleMessage >= 0 && messageArrayList.size() > lastVisibleMessage && messageArrayList.get(i).getSeenTime() == null) {
                         visibleMessagesArrayList.add(messageArrayList.get(i));
                     }
                 }
@@ -464,6 +643,7 @@ public class ChatsActivity extends AppCompatActivity {
     }
 
 
+
     private void setupMyTypingListener() {
 
         messageBox.addTextChangedListener(new TextWatcher() {
@@ -474,7 +654,26 @@ public class ChatsActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                if (charSequence.length() == 0) return;
+
+                if (charSequence.length() == 0) {
+                    sendButton.setVisibility(View.GONE);
+                    show_media_control_buttons.setVisibility(View.GONE);
+
+                    mediaButtonsContainer.setVisibility(View.VISIBLE);
+                    return;
+                }
+                if(charSequence.length() > 0){
+                    sendButton.setVisibility(View.VISIBLE);
+                }
+                if(charSequence.length() > 15){
+                    mediaButtonsContainer.setVisibility(View.GONE);
+                    show_media_control_buttons.setVisibility(View.VISIBLE);
+                } else {
+                    mediaButtonsContainer.setVisibility(View.VISIBLE);
+                    show_media_control_buttons.setVisibility(View.GONE);
+                }
+
+
                 myRef.child("online").setValue(Constants.TYPING);
                 //partnerName.setText("Online");
                 lastChangedTime = System.currentTimeMillis();
@@ -496,6 +695,7 @@ public class ChatsActivity extends AppCompatActivity {
     }
 
 
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -514,4 +714,127 @@ public class ChatsActivity extends AppCompatActivity {
         myRef.child("online").setValue(Constants.OFFLINE);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        getMenuInflater().inflate(R.menu.main_activity_menu, menu);
+
+        MenuItem item= menu.findItem(R.id.settings);
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.settings:
+                startSettingsFragment();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void startSettingsFragment() {
+        Fragment settingsFragment = new ProfileFragment();
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        //fragmentTransaction.setCustomAnimations(R.anim.fragments_enter_animation, R.anim.fragments_exit_animation);
+
+        fragmentTransaction.add(R.id.fragment_container_layout, settingsFragment, "SettingsFragment");
+        fragmentContainer.setVisibility(View.VISIBLE);
+        fragmentTransaction.addToBackStack("SettingsFragment");
+        fragmentTransaction.commit();
+    }
+
+    private void startBubbleEffectFragment(){
+        Bundle bundle = new Bundle();
+        String myMessage = Objects.requireNonNull(messageBox.getText()).toString();
+        bundle.putString("myMessage", myMessage );
+        Fragment MessageBubbleEffectFragement = new MessageBubbleEffectPreviewFragment();
+        MessageBubbleEffectFragement.setArguments(bundle);
+        FragmentManager manager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = manager.beginTransaction();
+        fragmentTransaction.add(R.id.fragment_container_layout, MessageBubbleEffectFragement, "BubbleEffectFragmgent");
+        fragmentContainer.setVisibility(View.VISIBLE);
+        fragmentTransaction.addToBackStack("BubbleEffectFragmgent");
+        fragmentTransaction.commit();
+    }
+
+
+    private void startLoadingFragment(){
+        Fragment loadingFragment = new LoadingFragment();
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        //fragmentTransaction.setCustomAnimations(R.anim.fragments_enter_animation, R.anim.fragments_exit_animation);
+
+        fragmentTransaction.add(R.id.fragment_container_layout, loadingFragment, "LoadingFragment");
+        fragmentContainer.setVisibility(View.VISIBLE);
+        fragmentTransaction.addToBackStack("LoadingFragment");
+        fragmentTransaction.commit();
+    }
+
+    private void removeLoadingFragment(){
+        if(getSupportFragmentManager().getBackStackEntryCount() > 0){
+            getSupportFragmentManager().popBackStack();
+            fragmentContainer.setVisibility(View.GONE);
+/*            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+
+                }
+            }, 300);*/
+        }
+    }
+
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        Fragment fragment = (Fragment) getSupportFragmentManager().findFragmentByTag("SettingsFragment");
+        if (fragment != null) {
+            fragment.onActivityResult(requestCode, resultCode, data);
+        }
+
+        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
+            CropImage.ActivityResult result = CropImage.getActivityResult(data);
+            if (resultCode == RESULT_OK) {
+                Uri resultUri = result.getUri();
+            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
+                Exception error = result.getError();
+            }
+        }
+
+    }
+    @Override
+    public void onBackPressed(){
+        int count = getSupportFragmentManager().getBackStackEntryCount();
+        if(count == 0){
+            super.onBackPressed();
+
+        } else {
+            getSupportFragmentManager().popBackStack();
+            fragmentContainer.setVisibility(View.GONE);
+/*            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+
+                }
+            }, 300);*/
+        }
+    }
+
+    @Override
+    public void onFragmentInteraction(int AnimationType) {
+
+    }
+
+    @Override
+    public void onBubbleAnimationAdded(int technique) {
+        sendMessage(technique);
+    }
 }

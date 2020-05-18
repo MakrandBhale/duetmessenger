@@ -4,23 +4,25 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.makarand.duetmessenger.Helper.Constants;
 import com.makarand.duetmessenger.Model.Message;
-import com.makarand.duetmessenger.Model.TypingMessage;
 import com.makarand.duetmessenger.R;
 import com.makarand.duetmessenger.ViewHolder.MessageListViewHolder;
-import com.makarand.duetmessenger.ViewHolder.TypingIndicatorViewHolder;
+//import com.makarand.duetmessenger.ViewHolder.TypingIndicatorViewHolder;
 import java.util.ArrayList;
 
-public class MessageListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHolder> {
     private ArrayList<Message> messageArrayList;
     private String myUid;
     private Context context;
     private int typingIndicatorIndex = -1;
     private int myLastMessageIndex = -1;
-    private boolean isIndicatorShowing = false;
+    private int statusDateShowingAtIndex = -1;
+    private boolean isTypingIndicatorShowing;
     public MessageListAdapter(String myUid, Context context) {
         this.myUid = myUid;
         this.messageArrayList = new ArrayList<>();
@@ -29,7 +31,7 @@ public class MessageListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
     @NonNull
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public MessageListViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view;
 
         switch (viewType) {
@@ -39,9 +41,6 @@ public class MessageListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             case R.layout.item_message_bubble_received:
                 view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message_bubble_received, parent, false);
                 break;
-            case R.layout.typing_indicator_item:
-                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.typing_indicator_item, parent, false);
-                return new TypingIndicatorViewHolder(view);
 
             default:
                 throw new IllegalStateException("Unexpected value: " + viewType);
@@ -51,60 +50,59 @@ public class MessageListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
+    public void onBindViewHolder(@NonNull MessageListViewHolder holder, int position) {
         Message currentMessage = messageArrayList.get(position);
-        if (currentMessage.getMessageType() == Constants.TYPING_MESSAGE) {
-            TypingMessage typingMessage = (TypingMessage) currentMessage;
-            ((TypingIndicatorViewHolder) viewHolder).startAnimation(typingMessage.getAvtarLink(), context);
-            return;
-        }
-
-        MessageListViewHolder holder = (MessageListViewHolder) viewHolder;
 
         ArrayList<String> formattedDate = currentMessage.getFormattedDate();
 
         if (currentMessage.getSender().equals(myUid)) {
             myLastMessageIndex = position;
-            showMessageStatus(currentMessage, holder);
+            setMessageStatus(currentMessage, holder);
         }
 
         if (position > 0) {
             Message prevMessage = messageArrayList.get(position - 1);
-            if (prevMessage != null && prevMessage.getMessageType() != Constants.TYPING_MESSAGE) {
+            if (prevMessage != null) {
                 if (currentMessage.isLateReply(prevMessage)) {
-                    holder.setTimeText(formattedDate);
+                    holder.showTimeText(formattedDate);
                 } else {
-                    holder.removeTimeText();
+                    holder.hideTimeText();
                 }
             } else {
-                holder.setTimeText(formattedDate);
+                holder.showTimeText(formattedDate);
             }
         } else {
-            holder.setTimeText(formattedDate);
+            holder.showTimeText(formattedDate);
         }
         holder.setMessageText(currentMessage.getMessage());
 
-        //myPrevMessage = currentMessage;
-        //holder.setListener(formattedDate);
+        if(currentMessage.getAnimationTechnique() != -1 && !currentMessage.isAnimationShown()){
+            holder.startAnimation(currentMessage.getAnimationTechnique());
+            currentMessage.setAnimationShown(true);
+        }
     }
 
-    private void showMessageStatus(Message currentMessage, MessageListViewHolder holder) {
-        if (currentMessage.isShowMessageStatus()) {
-            Long arrivalTime = (Long) currentMessage.getArrivalTime();
-            Long seenTime = (Long) currentMessage.getSeenTime();
+    private void setMessageStatus(Message currentMessage, MessageListViewHolder holder) {
+        Long arrivalTime = (Long) currentMessage.getArrivalTime();
+        Long seenTime = (Long) currentMessage.getSeenTime();
+        if (currentMessage.getShowMessageStatus()) {
             if (seenTime != null) {
                 /*Seen time exists means user saw the message, ignore all other times*/
                 String messageSeenTime = currentMessage.getFormattedDate(seenTime);
-                holder.showMessageStatus("Seen • " + messageSeenTime);
+                //holder.setMessageStatus("Seen • " + messageSeenTime);
+                holder.setMessageStatus("Seen");
             } else if (arrivalTime != null) {
                 /* user has not really seen the message, but message has been delivered.*/
                 String deliveryTime = currentMessage.getFormattedDate(arrivalTime);
-                holder.showMessageStatus("Delivered • " + deliveryTime);
+                //holder.setMessageStatus("Delivered • " + deliveryTime);
+                holder.setMessageStatus("Delivered");
             } else {
                 /*message has not yet been delivered. but sent to database.*/
-                holder.showMessageStatus(currentMessage.getMessageStatus());
+                holder.setMessageStatus(currentMessage.getMessageStatus());
             }
-        } else holder.hideMessageStatus();
+        } else {
+            holder.hideMessageStatus();
+        }
     }
 
 
@@ -133,50 +131,91 @@ public class MessageListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         return null;
     }
 
-    private int getTypingIndicatorIndex(){
-        if(typingIndicatorIndex == -1) return messageArrayList.size();
-        else return typingIndicatorIndex++;
-    }
-
-    public void addNewMessage(Message message){
-        int index = getTypingIndicatorIndex();
-
-        message.setShowMessageStatus(true);
-
-        int lastIndex = index - 1;
-        if(lastIndex > 0 && messageArrayList.get(lastIndex).getMessageType() == Constants.NORMAL_MESSAGE){
-            Message lastMessage = messageArrayList.get(lastIndex);
-            lastMessage.setShowMessageStatus(false);
-            this.notifyItemChanged(lastIndex);
-        }
+    public void addNewMessage(Message message) {
         //hideTypingIndicator();
-        messageArrayList.add(index, message);
+        int index = getInsertionIndex();
+        messageArrayList.add(message);
+        int prevMessageIndex = getMyPreviousMessage(index);
+        if(message.getSender().equals(myUid) && prevMessageIndex != -1){
+            Message prevMessage = messageArrayList.get(prevMessageIndex);
+            if(prevMessage.hasSameStatus(message)){
+                prevMessage.setShowMessageStatus(false);
+            } else {
+                prevMessage.setShowMessageStatus(true);
+            }
+            notifyItemChanged(prevMessageIndex);
+        }
+
         this.notifyItemInserted(index);
-
     }
 
-    public void updateMessage(Message messageToBeUpdated){
+    private int getInsertionIndex(){
+        if(isTypingIndicatorShowing) {
+            return messageArrayList.size() - 1;
+        } else {
+            return messageArrayList.size();
+        }
+    }
+
+    public void updateMessage(Message messageToBeUpdated) {
         int index = messageArrayList.indexOf(messageToBeUpdated);
-        if (index == myLastMessageIndex)
+        this.messageArrayList.set(index, messageToBeUpdated);
+        int prevMessageIndex = getMyPreviousMessage(index);
+        if(messageToBeUpdated.getSender().equals(myUid) && prevMessageIndex != -1){
+            Message prevMessage = messageArrayList.get(prevMessageIndex);
+            if(prevMessage.hasSameStatus(messageToBeUpdated)){
+                prevMessage.setShowMessageStatus(false);
+                notifyItemChanged(prevMessageIndex);
+            } else {
+                prevMessage.setShowMessageStatus(true);
+            }
+
+        }
+
+        int nextMessageIndex = getMyNextMessage(index);
+
+        if(messageToBeUpdated.getSender().equals(myUid) && nextMessageIndex != -1){
+            Message nextMessage = messageArrayList.get(nextMessageIndex);
+            if(nextMessage.hasSameStatus(messageToBeUpdated)){
+                nextMessage.setShowMessageStatus(false);
+                this.notifyItemChanged(nextMessageIndex);
+            }
+        } else {
+            /*last item*/
             messageToBeUpdated.setShowMessageStatus(true);
-        messageArrayList.set(index, messageToBeUpdated);
-        this.notifyItemChanged(index);
+        }
+        notifyItemChanged(index);
     }
 
+    private int getMyNextMessage(int index){
+        index = index + 1;
+        while(index < messageArrayList.size() && index >= 0){
+            Message message = messageArrayList.get(index);
+            if(message.getSender().equals(myUid)){
+                return index;
+            }
+            index++;
+        }
+        return -1;
+    }
 
-    public void showTypingIndicator(TypingMessage typingMessage) {
-        typingMessage.setMessageType(Constants.TYPING_MESSAGE);
-        typingIndicatorIndex = getTypingIndicatorIndex();
-        messageArrayList.add(typingIndicatorIndex, typingMessage);
-        this.notifyItemInserted(typingIndicatorIndex);
-        isIndicatorShowing = true;
+    private int getMyPreviousMessage(int index){
+        index = index - 1;
+        while(index >= 0){
+            Message lastMessage = messageArrayList.get(index);
+            if(lastMessage.getSender().equals(myUid))
+                return index;
+            index--;
+        }
+        return -1;
     }
 
     public void hideTypingIndicator() {
-        if(typingIndicatorIndex < 0) return;
-        messageArrayList.remove(typingIndicatorIndex);
-        this.notifyItemRemoved(typingIndicatorIndex);
-        typingIndicatorIndex = -1;
-        isIndicatorShowing = false;
+
+    }
+
+    public void addOldMessage(Message message) {
+        this.messageArrayList.add(0, message);
+        this.notifyItemInserted(0);
     }
 }

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/message_effect_slider_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_alignParentEnd="true"
+    android:layout_marginBottom="8dp"
+    android:background="@color/primaryBackgroundDark"
+    android:orientation="vertical"
+    >
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:background="@drawable/message_bubble_sent_background"
+        android:elevation="1dp"
+        android:id="@+id/message_preview"
+        android:layout_centerInParent="true"
+
+        >
+        <com.vanniktech.emoji.EmojiTextView
+            android:id="@+id/message_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginBottom="8dp"
+            android:scrollHorizontally="false"
+            android:singleLine="false"
+            android:text="hello world"
+            android:textAlignment="textStart"
+            android:textColor="@color/textPrimary"
+            android:textSize="16sp"
+            app:emojiSize="20sp"
+            android:fontFamily="@font/circular"
+            />
+    </RelativeLayout>
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_toStartOf="@id/slider"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:layout_marginEnd="8dp"
+        >
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp"
+            android:gravity="end"
+            >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Heart beat"
+                android:gravity="center_vertical"
+                android:textSize="14sp"
+
+                android:fontFamily="@font/semibold"
+                />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp"
+            android:gravity="end"
+            >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Soft"
+                android:gravity="center_vertical"
+                android:textSize="14sp"
+
+                android:fontFamily="@font/semibold"
+                />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp"
+            android:gravity="end"
+            >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Angry"
+                android:gravity="center_vertical"
+                android:textSize="14sp"
+
+                android:fontFamily="@font/semibold"
+                />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end"
+            >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Excited"
+                android:gravity="center_vertical"
+                android:textSize="14sp"
+
+                android:fontFamily="@font/semibold"
+                />
+        </LinearLayout>
+
+
+
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/slider"
+        android:layout_width="38dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:background="@drawable/message_effect_slider_background"
+        android:orientation="vertical"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:elevation="1dp"
+        android:layout_marginBottom="4dp"
+        >
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:layout_marginBottom="12dp"
+            android:background="@android:color/transparent"
+            app:srcCompat="@drawable/ic_dot"
+
+            />
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:layout_marginBottom="12dp"
+            android:background="@android:color/transparent"
+            app:srcCompat="@drawable/ic_dot" />
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:layout_marginBottom="12dp"
+            android:background="@android:color/transparent"
+            app:srcCompat="@drawable/ic_dot" />
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:background="@android:color/transparent"
+            app:srcCompat="@drawable/ic_dot" />
+    </LinearLayout>
+</RelativeLayout>

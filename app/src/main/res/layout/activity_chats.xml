@@ -33,14 +33,15 @@
         android:visibility="visible"
         app:cardBackgroundColor="@color/primaryBackgroundDark"
         app:cardPreventCornerOverlap="true"
-
+        android:paddingBottom="0dp"
         >
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
             android:background="@drawable/activity_background"
+            android:orientation="vertical"
+            android:animateLayoutChanges="true"
 
             >
 
@@ -48,50 +49,117 @@
                 android:id="@+id/message_list"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginTop="-1dp"
-                android:layout_marginBottom="1dp"
-                android:clipToPadding="false"
                 android:layout_above="@id/bottom_bar_include"
+                android:layout_marginTop="-1dp"
+                android:clipToPadding="false"
+                android:paddingBottom="16dp"
                 />
 
-            <LinearLayout
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/go_down_button_container"
-                android:gravity="center_vertical"
                 android:layout_centerHorizontal="true"
+                app:cardUseCompatPadding="true"
+                app:cardCornerRadius="14dp"
+                android:id="@+id/loadingCardViewLayout"
+                android:visibility="gone"
+                android:background="#fff"
                 >
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="4dp"
+                    >
+                    <ProgressBar
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:layout_marginEnd="8dp"
+                        />
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Loading messages"
+                        android:textSize="12sp"
+                        android:fontFamily="@font/semibold"
+                        />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <LinearLayout
+                android:id="@+id/go_down_button_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@id/bottom_bar_include"
+                android:layout_centerHorizontal="true"
+                android:gravity="center_vertical">
 
 
                 <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/new_messages_counter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@drawable/badge_background"
-                    android:textColor="@color/textPrimaryLight"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp"
-                    android:text="3 new messages"
-                    android:paddingTop="4dp"
-                    android:paddingBottom="4dp"
                     android:elevation="1dp"
-                    android:visibility="gone"
-                    android:id="@+id/new_messages_counter"
-                    />
+                    android:paddingStart="8dp"
+                    android:paddingTop="4dp"
+                    android:paddingEnd="8dp"
+                    android:paddingBottom="4dp"
+                    android:text="3 new messages"
+                    android:textColor="@color/textPrimaryLight"
+                    android:visibility="gone" />
+
                 <com.google.android.material.floatingactionbutton.FloatingActionButton
                     android:id="@+id/go_down_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_margin="16dp"
+                    android:visibility="gone"
                     app:backgroundTint="#fff"
                     app:elevation="2dp"
                     app:fabSize="mini"
                     app:srcCompat="@drawable/ic_arrow_downward_24px"
-                    app:useCompatPadding="false"
-                    android:visibility="gone"
-                    />
+                    app:useCompatPadding="false" />
 
             </LinearLayout>
 
+            <LinearLayout
+                android:id="@+id/typing_container"
+                android:layout_above="@id/bottom_bar_include"
+                android:layout_width="wrap_content"
+                android:layout_height="18dp"
+                android:gravity="center_vertical"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:orientation="horizontal"
+                android:background="@drawable/typing_indicator_background"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:animateLayoutChanges="true"
+                android:visibility="gone"
+                >
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/semibold"
+                        android:id="@+id/typing_partner_name"
+                        android:text="Someone"
+                        android:textSize="12sp"
+                        />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/regular"
+                        android:text=" is typing..."
+                        android:textSize="12sp"
+                        />
+            </LinearLayout>
 
             <include
                 android:id="@+id/bottom_bar_include"
@@ -100,11 +168,8 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
                 android:layout_marginBottom="-2dp"
-                 />
-
+                android:visibility="visible"
+                />
         </RelativeLayout>
-
     </com.google.android.material.card.MaterialCardView>
-
-
 </LinearLayout>

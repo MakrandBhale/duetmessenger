@@ -18,7 +18,7 @@ public class Constants {
     public static final int MESSAGE_STATUS_DELIVERED = 0;
     public static final int MESSAGE_STATUS_READ = 1;
     public static final long LATE_REPLY_TIMEOUT = 1;
-    public static final int MESSAGE_LIMIT = 10;
+    public static final int MESSAGE_LIMIT = 100;
     public static final String MY_OBJECT_LOCAL_STORAGE = "my_object";
     public static final String PARTNER_OBJECT_LOCAL_STORAGE = "partner_object";
     public static final String COUPLE_OBJECT_LOCAL_STORAGE = "couple_object";
@@ -27,4 +27,12 @@ public class Constants {
     public static final int NORMAL_MESSAGE = 0;
     public static final int TYPING_MESSAGE = 1;
 
+    public static final int REQUEST_OLD_MESSAGES_OFFSET = 2;
+
+
+    /*Bubble Animation Constants*/
+    public static final int HEART_BEAT = 1001;
+    public static final int SOFT = 1002;
+    public static final int ANGRY = 1003;
+    public static final int EXCITED = 1004;
 }

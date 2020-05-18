@@ -9,5 +9,5 @@
         android:id="@+id/settings"
         android:title="Settings"
         android:icon="@drawable/ic_settings"
-        app:showAsAction="always"/>
+        app:showAsAction="never"/>
 </menu>

@@ -1,28 +1,72 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
+    android:animateLayoutChanges="true"
+    android:background="@color/primaryBackgroundDark"
     >
-
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="wrap_content"
+        android:gravity="bottom"
+        android:orientation="horizontal"
+        android:paddingTop="4dp"
+
+        >
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/show_media_control_buttons"
+            android:layout_width="28dp"
+            android:layout_height="38dp"
+            android:layout_marginBottom="6dp"
+            android:background="@android:color/transparent"
+            android:visibility="gone"
+            app:srcCompat="@drawable/ic_arrow_right"
+
+            />
+
+        <LinearLayout
+            android:id="@+id/media_buttons_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp">
+
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/round_button_plain"
+                app:elevation="1dp"
+                app:srcCompat="@drawable/ic_image_24px" />
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:layout_marginEnd="4dp"
+                android:background="@drawable/round_button_plain"
+                app:elevation="1dp"
+                app:srcCompat="@drawable/ic_camera_24px" />
+        </LinearLayout>
 
         <androidx.cardview.widget.CardView
             android:id="@+id/bottom_bar"
             style="@style/CustomCardViewStyle"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_margin="4dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginBottom="6dp"
+            android:layout_weight="1"
             android:visibility="visible"
             app:cardBackgroundColor="@color/primaryBackgroundLight"
             app:cardCornerRadius="28dp"
             app:cardElevation="1dp"
-            app:cardPreventCornerOverlap="true">
+            app:cardPreventCornerOverlap="true"
+
+            >
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -44,17 +88,17 @@
 
                 <com.vanniktech.emoji.EmojiEditText
                     android:id="@+id/message_box"
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
+                    android:layout_margin="4dp"
                     android:layout_marginStart="8dp"
                     android:layout_marginEnd="8dp"
-                    android:layout_weight="1"
                     android:background="@null"
                     android:fontFamily="@font/regular"
                     android:hint="Type a message..."
                     android:imeOptions="actionSend"
-                    android:inputType="textMultiLine"
+                    android:inputType="textMultiLine|textNoSuggestions"
                     android:maxLines="6"
                     android:scrollbars="vertical"
                     android:textColor="@color/textPrimary"
@@ -76,15 +120,21 @@
                                 android:textColorHint="#868686"
                                 />-->
 
-                <androidx.appcompat.widget.AppCompatImageButton
-                    android:id="@+id/send_button"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginEnd="2dp"
-                    android:background="@drawable/round_button"
-                    app:srcCompat="@drawable/ic_arrow_upward_24px" />
+
             </LinearLayout>
         </androidx.cardview.widget.CardView>
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/send_button"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginEnd="2dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/round_button"
+            android:elevation="1dp"
+            android:visibility="visible"
+            app:srcCompat="@drawable/ic_arrow_upward_24px"
+
+            />
     </LinearLayout>
-</LinearLayout>
+</RelativeLayout>

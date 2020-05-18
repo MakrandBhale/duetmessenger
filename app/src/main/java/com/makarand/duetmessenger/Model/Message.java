@@ -1,6 +1,7 @@
 package com.makarand.duetmessenger.Model;
 
 
+import android.hardware.ConsumerIrManager;
 import android.text.format.DateFormat;
 
 import androidx.annotation.NonNull;
@@ -21,11 +22,13 @@ public class Message {
     private String sender, receiver, message;
     private int messageStatus;
     private Object timestamp;
-    private Object arrivalTime;
+    private Object arrivalTime = null;
     private String messageId;
     private Object seenTime = null;
+    private int animationTechnique = -1;
     @Exclude private boolean showMessageStatus = false;
     @Exclude private int messageType = Constants.NORMAL_MESSAGE;
+    @Exclude private boolean animationShown = false;
     public Message(boolean TYPING){
         if(TYPING){
             this.sender = "";
@@ -36,6 +39,8 @@ public class Message {
             this.messageId = Constants.TYPING_MESSAGE_TYPE;
         }
     }
+
+
     public Message(String messageId, String sender, String receiver, String message, int messageStatus) {
         this.sender = sender;
         this.receiver = receiver;
@@ -45,8 +50,36 @@ public class Message {
         this.messageId = messageId;
     }
 
+    public Message(String messageId, String sender, String receiver, String message, int messageStatus, int animationTechnique) {
+        this.sender = sender;
+        this.receiver = receiver;
+        this.message = message;
+        this.messageStatus = messageStatus;
+        this.timestamp = ServerValue.TIMESTAMP;
+        this.messageId = messageId;
+        this.animationTechnique = animationTechnique;
+    }
 
     public Message() {
+    }
+
+
+    public int getAnimationTechnique() {
+        return animationTechnique;
+    }
+
+    @Exclude
+    public void setAnimationTechnique(int animationTechnique) {
+        this.animationTechnique = animationTechnique;
+    }
+
+    @Exclude
+    public boolean isAnimationShown() {
+        return animationShown;
+    }
+
+    public void setAnimationShown(boolean animationShown) {
+        this.animationShown = animationShown;
     }
 
     public Object getSeenTime() {
@@ -114,13 +147,37 @@ public class Message {
     }
 
     @Exclude
+    public boolean hasSameStatus(Message otherMessage){
+        if(otherMessage.getSeenTime() != null && this.getSeenTime() != null){
+            return true;
+        } else {
+            if(otherMessage.getSeenTime() == null && this.getSeenTime() != null){
+                return false;
+            } else if(otherMessage.getSeenTime() != null && this.getSeenTime() == null) {
+                return false;
+            }
+        }
+
+        if(otherMessage.getArrivalTime() != null && this.getArrivalTime() != null){
+            return true;
+        } else {
+            if(otherMessage.getArrivalTime() == null && this.getArrivalTime() != null){
+                return false;
+            } else if(otherMessage.getArrivalTime() != null && this.getArrivalTime() == null) {
+                return false;
+            }
+        }
+        return (otherMessage.getMessageStatus() == this.messageStatus);
+    }
+
+    @Exclude
     public boolean isShowMessageStatus() {
         return showMessageStatus;
     }
 
     @Exclude
-    public void setShowMessageStatus(boolean showMessageStatusb) {
-        this.showMessageStatus = showMessageStatusb;
+    public void setShowMessageStatus(boolean showMessageStatus) {
+        this.showMessageStatus = showMessageStatus;
     }
 
     @Exclude

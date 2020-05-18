@@ -23,13 +23,13 @@ public class SentMessageViewHolder extends RecyclerView.ViewHolder {
     public SentMessageViewHolder(@NonNull View view) {
         super(view);
 
-        messageText = view.findViewById(R.id.message_text);
+/*        messageText = view.findViewById(R.id.message_text);
         timeText = view.findViewById(R.id.message_time);
         dateText = view.findViewById(R.id.message_date);
         //messageBubble = view.findViewById(R.id.bubble);
         timeDateContainer = view.findViewById(R.id.date_time_container);
         messageStatusContainer = view.findViewById(R.id.message_status_container);
         statusTextTextView = view.findViewById(R.id.message_status_text);
-        typingIndicatorContainer = view.findViewById(R.id.typing_indicator_container);
+        typingIndicatorContainer = view.findViewById(R.id.typing_indicator_container);*/
     }
 }

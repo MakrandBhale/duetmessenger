@@ -9,10 +9,12 @@ public class TypingMessage extends Message{
     @Exclude private String avtarLink;
 
     public TypingMessage(){
-
+        this.messageType = Constants.TYPING_MESSAGE;
     }
     public TypingMessage(String avtarLink){
+        this.messageType = Constants.TYPING_MESSAGE;
         this.avtarLink = avtarLink;
+
     }
 
     @Override
