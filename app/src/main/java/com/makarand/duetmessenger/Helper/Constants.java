@@ -22,17 +22,21 @@ public class Constants {
     public static final String MY_OBJECT_LOCAL_STORAGE = "my_object";
     public static final String PARTNER_OBJECT_LOCAL_STORAGE = "partner_object";
     public static final String COUPLE_OBJECT_LOCAL_STORAGE = "couple_object";
+    public static final String MEDIA_IMAGE_STORAGE_PATH = "media_images/";
+
+    public static final String MASTER_KEY_URI = "android-keystore://my_master_key_id";
     public static final String FREE_PASS = "free_pass";
 
     public static final int NORMAL_MESSAGE = 0;
     public static final int TYPING_MESSAGE = 1;
 
     public static final int REQUEST_OLD_MESSAGES_OFFSET = 2;
-
+    public static final String MEDIA_STORAGE_REFERENCE = "data/data/com.makarand.duetmessenger/media/";
 
     /*Bubble Animation Constants*/
     public static final int HEART_BEAT = 1001;
     public static final int SOFT = 1002;
     public static final int ANGRY = 1003;
     public static final int EXCITED = 1004;
+    public static final String IMAGE_UPLOAD_IN_PROGRESS = "ImageUploadInProgress";
 }

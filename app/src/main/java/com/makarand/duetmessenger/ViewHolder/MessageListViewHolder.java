@@ -1,16 +1,30 @@
 package com.makarand.duetmessenger.ViewHolder;
 
 import android.animation.Animator;
+import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatImageView;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
+import com.google.android.material.card.MaterialCardView;
 import com.google.firebase.database.annotations.NotNull;
 import com.makarand.duetmessenger.Helper.Constants;
+import com.makarand.duetmessenger.Helper.SquareImageView;
+import com.makarand.duetmessenger.Helper.SquareLottieView;
 import com.makarand.duetmessenger.R;
 import com.vanniktech.emoji.EmojiTextView;
 
@@ -24,7 +38,10 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
     public View messageBubble;
     public LinearLayout timeDateContainer;
     public LinearLayout messageStatusContainer;
-
+    public SquareImageView messageImage;
+    public MaterialCardView messageImageContainer;
+    public ProgressBar progressBar;
+    public SquareLottieView squareLottieView;
     public MessageListViewHolder(@NotNull View view){
         super(view);
         messageText = view.findViewById(R.id.message_text);
@@ -34,12 +51,17 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
         timeDateContainer = view.findViewById(R.id.date_time_container);
         messageStatusContainer = view.findViewById(R.id.message_status_container);
         statusTextTextView = view.findViewById(R.id.message_status_text);
+        messageImage = view.findViewById(R.id.message_image);
+        messageImageContainer = view.findViewById(R.id.message_image_container);
+        progressBar = view.findViewById(R.id.loader);
+        squareLottieView = view.findViewById(R.id.animation_view);
     }
 
     public void setMessageText(String message){
+        messageText.setVisibility(View.VISIBLE);
         messageText.setText(message);
     }
-
+    public void hideMessageText(){messageText.setVisibility(View.GONE);}
     public void startAnimation(int tech){
         Techniques techniques;
         switch (tech){
@@ -137,6 +159,38 @@ public class MessageListViewHolder extends RecyclerView.ViewHolder {
     }
     public void hideMessageStatus() {
         messageStatusContainer.setVisibility(View.GONE);
+    }
+
+
+    public void hideImage(){
+        messageImageContainer.setVisibility(View.GONE);
+    }
+
+    public void setImage(String imageLink, Context context) {
+        messageImage.setBackground(null);
+        if(imageLink.equals(Constants.IMAGE_UPLOAD_IN_PROGRESS)){
+            squareLottieView.setVisibility(View.VISIBLE);
+        } else {
+            Glide.with(context)
+                    .load(imageLink)
+                    .centerCrop()
+                    .listener(new RequestListener<Drawable>() {
+                        @Override
+                        public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                            return false;
+                        }
+
+                        @Override
+                        public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                            squareLottieView.setVisibility(View.GONE);
+                            return false;
+                        }
+                    })
+                    .into(messageImage);
+
+
+        }
+        messageImageContainer.setVisibility(View.VISIBLE);
     }
 
 }

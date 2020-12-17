@@ -8,30 +8,34 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.makarand.duetmessenger.Helper.Constants;
+import com.makarand.duetmessenger.Helper.EndToEnd;
 import com.makarand.duetmessenger.Model.Message;
 import com.makarand.duetmessenger.R;
 import com.makarand.duetmessenger.ViewHolder.MessageListViewHolder;
+import com.makarand.duetmessenger.ViewHolder.TypingIndicatorViewHolder;
 //import com.makarand.duetmessenger.ViewHolder.TypingIndicatorViewHolder;
 import java.util.ArrayList;
 
-public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHolder> {
+public class MessageListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private ArrayList<Message> messageArrayList;
-    private String myUid;
+    private String myUid, key;
     private Context context;
     private int typingIndicatorIndex = -1;
     private int myLastMessageIndex = -1;
     private int statusDateShowingAtIndex = -1;
     private boolean isTypingIndicatorShowing;
-    public MessageListAdapter(String myUid, Context context) {
+    public MessageListAdapter(String myUid, Context context, String key) {
         this.myUid = myUid;
         this.messageArrayList = new ArrayList<>();
         this.context = context;
+        this.key = key;
     }
 
     @NonNull
     @Override
-    public MessageListViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view;
 
         switch (viewType) {
@@ -41,7 +45,9 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
             case R.layout.item_message_bubble_received:
                 view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message_bubble_received, parent, false);
                 break;
-
+            case R.layout.item_bubble_typing_indicator:
+                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_bubble_typing_indicator, parent, false);
+                return new TypingIndicatorViewHolder(view);
             default:
                 throw new IllegalStateException("Unexpected value: " + viewType);
         }
@@ -50,11 +56,16 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
     }
 
     @Override
-    public void onBindViewHolder(@NonNull MessageListViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
         Message currentMessage = messageArrayList.get(position);
 
+        if(currentMessage.getMessageType() == Constants.TYPING_MESSAGE){
+            TypingIndicatorViewHolder holder1 = (TypingIndicatorViewHolder) viewHolder;
+            holder1.startAnimation();
+            return;
+        }
         ArrayList<String> formattedDate = currentMessage.getFormattedDate();
-
+        MessageListViewHolder holder = (MessageListViewHolder) viewHolder;
         if (currentMessage.getSender().equals(myUid)) {
             myLastMessageIndex = position;
             setMessageStatus(currentMessage, holder);
@@ -74,7 +85,29 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
         } else {
             holder.showTimeText(formattedDate);
         }
-        holder.setMessageText(currentMessage.getMessage());
+
+        if(currentMessage.getImage() != null){
+            holder.setImage(currentMessage.getImage(), context);
+        } else {
+            //Glide.clear(holder.messageImage);
+            Glide.with(context).clear(holder.messageImage);
+            holder.hideImage();
+            holder.messageImage.setImageDrawable(null);
+        }
+
+        if(currentMessage.getMessage() == null || currentMessage.getMessage().isEmpty()){
+            holder.hideMessageText();
+        } else {
+            String message = currentMessage.getMessage();
+            try {
+                EndToEnd endToEnd = new EndToEnd(this.key);
+                message = endToEnd.decrypt(message);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            holder.setMessageText(message);
+        }
+
 
         if(currentMessage.getAnimationTechnique() != -1 && !currentMessage.isAnimationShown()){
             holder.startAnimation(currentMessage.getAnimationTechnique());
@@ -115,7 +148,7 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
     public int getItemViewType(int position) {
         Message message = messageArrayList.get(position);
         if (message.getMessageType() == Constants.TYPING_MESSAGE) {
-            return R.layout.typing_indicator_item;
+            return R.layout.item_bubble_typing_indicator;
         } else {
             if (message.getSender().equals(myUid)) {
                 return R.layout.item_message_bubble_sent;
@@ -134,7 +167,7 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
     public void addNewMessage(Message message) {
         //hideTypingIndicator();
         int index = getInsertionIndex();
-        messageArrayList.add(message);
+        messageArrayList.add(index, message);
         int prevMessageIndex = getMyPreviousMessage(index);
         if(message.getSender().equals(myUid) && prevMessageIndex != -1){
             Message prevMessage = messageArrayList.get(prevMessageIndex);
@@ -162,6 +195,7 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
         this.messageArrayList.set(index, messageToBeUpdated);
         int prevMessageIndex = getMyPreviousMessage(index);
         if(messageToBeUpdated.getSender().equals(myUid) && prevMessageIndex != -1){
+
             Message prevMessage = messageArrayList.get(prevMessageIndex);
             if(prevMessage.hasSameStatus(messageToBeUpdated)){
                 prevMessage.setShowMessageStatus(false);
@@ -191,7 +225,7 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
         index = index + 1;
         while(index < messageArrayList.size() && index >= 0){
             Message message = messageArrayList.get(index);
-            if(message.getSender().equals(myUid)){
+            if(message.getMessageType() != Constants.TYPING_MESSAGE && message.getSender().equals(myUid)){
                 return index;
             }
             index++;
@@ -203,19 +237,33 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListViewHold
         index = index - 1;
         while(index >= 0){
             Message lastMessage = messageArrayList.get(index);
-            if(lastMessage.getSender().equals(myUid))
+            if(lastMessage.getMessageType()!= Constants.TYPING_MESSAGE && lastMessage.getSender().equals(myUid))
                 return index;
             index--;
         }
         return -1;
     }
 
-    public void hideTypingIndicator() {
-
-    }
 
     public void addOldMessage(Message message) {
         this.messageArrayList.add(0, message);
         this.notifyItemInserted(0);
+    }
+
+    public void hideTypingIndicator() {
+        if(isTypingIndicatorShowing){
+            int index = messageArrayList.size() - 1;
+            messageArrayList.remove(index);
+            notifyItemRemoved(index);
+        }
+        isTypingIndicatorShowing = false;
+    }
+
+
+    public void showTypingIndicator() {
+        isTypingIndicatorShowing = true;
+        Message message = new Message(Constants.TYPING_MESSAGE);
+        messageArrayList.add(message);
+        notifyItemInserted(messageArrayList.size() - 1);
     }
 }

@@ -13,6 +13,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SimpleItemAnimator;
 
 import android.animation.Animator;
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -27,9 +29,12 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
+import com.camerakit.CameraKitView;
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -40,11 +45,14 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ServerValue;
-import com.google.gson.internal.$Gson$Preconditions;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.makarand.duetmessenger.Adapter.MessageListAdapter;
 import com.makarand.duetmessenger.Fragments.LoadingFragment;
 import com.makarand.duetmessenger.Fragments.MessageBubbleEffectPreviewFragment;
 import com.makarand.duetmessenger.Fragments.ProfileFragment;
+import com.makarand.duetmessenger.Helper.EndToEnd;
 import com.makarand.duetmessenger.Model.Message;
 import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -57,16 +65,20 @@ import com.google.firebase.database.ValueEventListener;
 import com.makarand.duetmessenger.Helper.Constants;
 import com.makarand.duetmessenger.Helper.LocalStorage;
 import com.makarand.duetmessenger.Model.Couple;
-import com.makarand.duetmessenger.Model.TypingMessage;
 import com.makarand.duetmessenger.Model.User;
 import com.theartofdev.edmodo.cropper.CropImage;
+import com.theartofdev.edmodo.cropper.CropImageView;
 import com.vanniktech.emoji.EmojiEditText;
 import com.vanniktech.emoji.EmojiManager;
 import com.vanniktech.emoji.EmojiPopup;
 import com.vanniktech.emoji.ios.IosEmojiProvider;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -76,11 +88,12 @@ import java.util.concurrent.TimeUnit;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import id.zelory.compressor.Compressor;
 
 public class ChatsActivity extends AppCompatActivity implements ProfileFragment.OnFragmentInteractionListener, MessageBubbleEffectPreviewFragment.OnFragmentInteractionListener{
+    private static final int CAMERA_ACTIVITY_CODE = 1011;
     @BindView(R.id.partner_name)
     TextView partnerName;
-
     @BindView(R.id.send_button)
     ImageButton sendButton;
     @BindView(R.id.emojiButton)
@@ -111,7 +124,9 @@ public class ChatsActivity extends AppCompatActivity implements ProfileFragment.
     @BindView(R.id.typing_partner_name) TextView typing_partner_name;
     @BindView(R.id.show_media_control_buttons)
     AppCompatImageButton show_media_control_buttons;
-
+    @BindView(R.id.image_to_send_imageview) ImageView imageToSendImageView;
+    @BindView(R.id.image_to_send_container) MaterialCardView imageToSendContainer;
+    Uri imageToSendUri = null;
     LocalStorage localStorage;
     User me, partner;
     String myUid, partnerUid;
@@ -206,8 +221,10 @@ public class ChatsActivity extends AppCompatActivity implements ProfileFragment.
         sendButton.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
-                if(Objects.requireNonNull(messageBox.getText()).length() > 0)
-                    startBubbleEffectFragment();
+                if(Objects.requireNonNull(messageBox.getText()).length() > 0){
+
+                }
+                    //startBubbleEffectFragment();
                 else return false;
                 return true;
             }
@@ -264,6 +281,13 @@ public class ChatsActivity extends AppCompatActivity implements ProfileFragment.
                 ArrayList<Message> temp = new ArrayList<>();
                 for(DataSnapshot snapshot : dataSnapshot.getChildren()){
                     Message message = snapshot.getValue(Message.class);
+                    try {
+                        EndToEnd endToEnd = new EndToEnd(me.getChatroomId());
+                        message.setMessage(endToEnd.decrypt(message.getMessage()));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Toast.makeText(ChatsActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
                     temp.add(message);
                 }
                 lastMessageKey = temp.get(0).getMessageId();
@@ -296,6 +320,14 @@ public class ChatsActivity extends AppCompatActivity implements ProfileFragment.
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 Message message = dataSnapshot.getValue(Message.class);
+                try {
+                    EndToEnd endToEnd = new EndToEnd(me.getChatroomId());
+                    message.setMessage(endToEnd.decrypt(message.getMessage()));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Toast.makeText(ChatsActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+
 
                 if(lastMessageKey == null)
                     lastMessageKey = dataSnapshot.getKey();
@@ -359,7 +391,7 @@ public class ChatsActivity extends AppCompatActivity implements ProfileFragment.
         messageListRecyclerView.setLayoutManager(linearLayoutManager);
 
 
-        adapter = new MessageListAdapter(myUid, getApplicationContext());
+        adapter = new MessageListAdapter(myUid, getApplicationContext(), me.getChatroomId());
         messageListRecyclerView.setAdapter(adapter);
     }
 
@@ -395,8 +427,15 @@ public class ChatsActivity extends AppCompatActivity implements ProfileFragment.
         if (messageBox.getText() == null) return;
         myRef.child("online").setValue(Constants.ONLINE);
         String messageText = messageBox.getText().toString().trim();
+        try {
+            EndToEnd endToEnd = new EndToEnd(me.getChatroomId());
+            messageText = endToEnd.encrypt(messageText);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
 
-        if (messageText.length() <= 0)
+        if (messageText.isEmpty() && imageToSendUri == null)
             return;
         messageBox.setText("");
         String messageId = chatsRef.push().getKey();
@@ -408,6 +447,13 @@ public class ChatsActivity extends AppCompatActivity implements ProfileFragment.
         }
         messageListRecyclerView.scrollToPosition(messageListRecyclerView.getAdapter().getItemCount() - 1);
 
+        if(imageToSendUri != null){
+            /*user selected an image*/
+            imageToSendContainer.setVisibility(View.GONE);
+            uploadImage(messageId);
+            message.setImage(Constants.IMAGE_UPLOAD_IN_PROGRESS);
+
+        }
 
         chatsRef.child(messageId).setValue(message).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
@@ -422,6 +468,8 @@ public class ChatsActivity extends AppCompatActivity implements ProfileFragment.
                 chatsRef.push().setValue(message);
             }
         });
+        imageToSendUri = null;
+
     }
 
 
@@ -461,6 +509,7 @@ public class ChatsActivity extends AppCompatActivity implements ProfileFragment.
                     }
                 })
                 .playOn(onlineStatusTextView);
+
         if(greenOnlineDot.getVisibility() != View.VISIBLE)
         YoYo.with(Techniques.ZoomIn)
                 .duration(500)
@@ -531,7 +580,8 @@ public class ChatsActivity extends AppCompatActivity implements ProfileFragment.
     }
 
     private void showTypingIndicator() {
-        YoYo.with(Techniques.SlideInUp)
+        adapter.showTypingIndicator();
+/*        YoYo.with(Techniques.SlideInUp)
                 .duration(600)
                 .onStart(new YoYo.AnimatorCallback() {
                     @Override
@@ -539,11 +589,13 @@ public class ChatsActivity extends AppCompatActivity implements ProfileFragment.
                         includeTypingIndicatorContainer.setVisibility(View.VISIBLE);
                     }
                 })
-                .playOn(includeTypingIndicatorContainer);
+                .playOn(includeTypingIndicatorContainer);*/
+        scrollToBottom();
     }
 
     private void hideTypingIndicator() {
-        YoYo.with(Techniques.SlideOutDown)
+        adapter.hideTypingIndicator();
+        /*      YoYo.with(Techniques.SlideOutDown)
                 .duration(300)
                 .onEnd(new YoYo.AnimatorCallback() {
                     @Override
@@ -552,7 +604,7 @@ public class ChatsActivity extends AppCompatActivity implements ProfileFragment.
                     }
                 })
                 .playOn(includeTypingIndicatorContainer);
-
+*/
     }
 
 
@@ -785,10 +837,82 @@ public class ChatsActivity extends AppCompatActivity implements ProfileFragment.
             }, 300);*/
         }
     }
+    private Uri compressImage(Uri photoUri) {
+        try{
+            File compressedImageFile =
+                    new Compressor(getApplicationContext())
+                            .setQuality(50)
+                            .compressToFile(new File(photoUri.getPath()));
+            return Uri.fromFile(compressedImageFile);
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private String getDateFingerprint(){
+        Date dNow = new Date();
+        @SuppressLint("SimpleDateFormat") SimpleDateFormat ft = new SimpleDateFormat("yyMMddhhmmssMs");
+        return ft.format(dNow);
+    }
+
+    private void uploadImage(String chatId){
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+        String myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        StorageReference storageReference = storage.getReference(Constants.MEDIA_IMAGE_STORAGE_PATH + myUid + "/images/duet_messenger_" + getDateFingerprint() + ".jpg");
+        final Uri compressedImage = compressImage(imageToSendUri);
+        if(compressedImage == null){
+            Toast.makeText(getApplicationContext(), "Failed to upload image.", Toast.LENGTH_LONG).show();
+            return;
+        }
+        imageToSendUri = null;
+        storageReference.putFile(compressedImage)
+                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        //Toast.makeText(getApplicationContext(), "Uploaded", Toast.LENGTH_SHORT).show();
+                        storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri downloadUri) {
+                                DatabaseReference tempRef = chatsRef.child(chatId).child("image");
+                                tempRef.setValue(String.valueOf(downloadUri));
+                                /*loader.setVisibility(View.GONE);
+                                //LocalStorage localStorage = new LocalStorage(getActivity());
+                                //localStorage.setString(Constants.AVTAR_LOCAL_KEY, String.valueOf(downloadUri));
+                                DatabaseReference myRef = FirebaseDatabase.getInstance().getReference(Constants.USERS_TREE + "/"+myUid+"/");
+                                myRef.child("avtar").setValue(String.valueOf(downloadUri));
+                                fetchAvtarFromLocalStorage();*/
+                            }
+                        });
+
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        //Toast.makeText(getActivity(), "Error uploading file:" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        //loader.setVisibility(View.GONE);
+                    }
+                });
+    }
+
 
     @Override
     public void onFragmentInteraction(Uri uri) {
 
+    }
+
+    @OnClick (R.id.open_gallery_button)
+    public void openGallery(View view){
+        CropImage.activity()
+                .setGuidelines(CropImageView.Guidelines.ON)
+                .start(ChatsActivity.this);
+    }
+
+    @OnClick(R.id.close_image_button)
+    public void closeImageButton(View view){
+        imageToSendUri = null;
+        imageToSendContainer.setVisibility(View.GONE);
     }
 
     @Override
@@ -803,13 +927,50 @@ public class ChatsActivity extends AppCompatActivity implements ProfileFragment.
         if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
             CropImage.ActivityResult result = CropImage.getActivityResult(data);
             if (resultCode == RESULT_OK) {
-                Uri resultUri = result.getUri();
+                imageToSendUri = result.getUri();
+                showImagePreview();
+                //uploadImage(resultUri);
             } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                 Exception error = result.getError();
             }
         }
 
+        if (requestCode == CAMERA_ACTIVITY_CODE) {
+            if(resultCode == Activity.RESULT_OK){
+                imageToSendUri = Uri.parse(data.getStringExtra("cameraImage"));
+                showImagePreview();
+            }
+            if (resultCode == Activity.RESULT_CANCELED) {
+                //Write your code if there's no result
+            }
+        }
     }
+
+    private void showImagePreview() {
+        sendButton.setVisibility(View.VISIBLE);
+        Glide.with(getApplicationContext())
+                .load(imageToSendUri)
+
+                .into(imageToSendImageView);
+        YoYo.with(Techniques.SlideInUp)
+                .delay(50)
+                .duration(300)
+                .onStart(new YoYo.AnimatorCallback() {
+                    @Override
+                    public void call(Animator animator) {
+                        imageToSendContainer.setVisibility(View.VISIBLE);
+                    }
+                })
+                .playOn(imageToSendContainer);
+        sendButton.setVisibility(View.VISIBLE);
+    }
+
+    @OnClick (R.id.open_camera_button)
+    public void openCameraActivity(View view){
+        Intent i = new Intent(this, CameraActivity.class);
+        startActivityForResult(i, CAMERA_ACTIVITY_CODE);
+    }
+
     @Override
     public void onBackPressed(){
         int count = getSupportFragmentManager().getBackStackEntryCount();

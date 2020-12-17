@@ -17,20 +17,20 @@ import com.makeramen.roundedimageview.RoundedImageView;
 public class TypingIndicatorViewHolder extends RecyclerView.ViewHolder  {
     private TextView one, two, three;
     private RoundedImageView avtarImageView;
-    //private LinearLayout threeDotsContainer;
+    private LinearLayout threeDotsContainer;
 
     public TypingIndicatorViewHolder(@NonNull View itemView) {
         super(itemView);
-/*        one = itemView.findViewById(R.id.one);
+        one = itemView.findViewById(R.id.one);
         two = itemView.findViewById(R.id.two);
-        three = itemView.findViewById(R.id.three);*/
+        three = itemView.findViewById(R.id.three);
         avtarImageView = itemView.findViewById(R.id.avtar_imageview);
-        //threeDotsContainer = itemView.findViewById(R.id.three_dots_container);
+        threeDotsContainer = itemView.findViewById(R.id.three_dots_container);
     }
 
 
-    public void startAnimation(String link, Context context){
-        setAvtar(link, context);
+    public void startAnimation(){
+        //setAvtar(link, context);
 
         YoYo.with(Techniques.Bounce)
                 .delay(100)

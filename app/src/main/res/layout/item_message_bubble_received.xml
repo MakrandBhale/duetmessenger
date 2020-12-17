@@ -67,9 +67,46 @@
 
 
                 >
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/message_image_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentTop="true"
+                    android:visibility="visible"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginEnd="4dp"
+                    app:cardCornerRadius="24dp"
 
+                    >
+                    <com.makarand.duetmessenger.Helper.SquareImageView
+                        android:id="@+id/message_image"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:visibility="visible"
+                        android:adjustViewBounds="true"
+                        />
+                    <ProgressBar
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:visibility="visible"
+                        android:id="@+id/loader"
+                        />
+                    <androidx.appcompat.widget.AppCompatImageButton
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        app:srcCompat="@drawable/ic_retry_24px"
+                        android:background="@drawable/round_button_plain"
+                        android:visibility="gone"
+                        android:id="@+id/retry_button"
+                        android:layout_gravity="center"
+
+                        />
+                </com.google.android.material.card.MaterialCardView>
                 <com.vanniktech.emoji.EmojiTextView
                     android:id="@+id/message_text"
+                    android:layout_below="@id/message_image_container"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
@@ -78,7 +115,7 @@
                     android:layout_marginBottom="8dp"
                     android:scrollHorizontally="false"
                     android:singleLine="false"
-                    android:text="This is sample afgsdfgsdf gs dfgsdfgsdfgsdfgsdfgsdfgsdfgsdfgsdfgsdfgsdfgsdfgsdfgsdfgsdfgsdfgsdfgsdfgsdfgsdfgsdfg"
+                    android:text="This is sample "
                     android:textAlignment="textStart"
                     android:textColor="@color/primaryBackgroundLight"
                     android:textSize="16sp"

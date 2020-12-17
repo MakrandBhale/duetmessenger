@@ -8,6 +8,7 @@ android {
         applicationId "com.makarand.duetmessenger"
         minSdkVersion 19
         targetSdkVersion 29
+        multiDexEnabled true
 
         versionCode 1
         versionName "1.0"
@@ -30,12 +31,24 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    /* Camera Fragment Libraries*/
+
+    implementation 'com.camerakit:camerakit:1.0.0-beta3.11'
+    implementation 'com.camerakit:jpegkit:0.1.0'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.71'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.0.0'
+
+    /*camera fragment libraries end*/
+
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    implementation 'com.google.firebase:firebase-auth:19.3.0'
-    implementation 'com.google.firebase:firebase-database:19.2.1'
+    implementation 'com.google.firebase:firebase-auth:19.3.1'
+    implementation 'com.google.firebase:firebase-database:19.3.0'
 
     implementation 'com.makeramen:roundedimageview:2.3.0'
+    implementation "com.airbnb.android:lottie:3.4.0"
+    implementation 'com.google.crypto.tink:tink-android:1.5.0'
 
 
     implementation 'com.google.android.material:material:1.1.0'
@@ -60,4 +73,5 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
     implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'com.android.support:cardview-v7:28.0.0'
 }

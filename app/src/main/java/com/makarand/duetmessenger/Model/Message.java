@@ -11,6 +11,7 @@ import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
 import com.google.firebase.database.ServerValue;
 import com.makarand.duetmessenger.Helper.Constants;
+import com.makarand.duetmessenger.Helper.EndToEnd;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -19,7 +20,7 @@ import io.reactivex.internal.operators.observable.ObservableElementAt;
 
 @IgnoreExtraProperties
 public class Message {
-    private String sender, receiver, message;
+    private String sender, receiver, message, image;
     private int messageStatus;
     private Object timestamp;
     private Object arrivalTime = null;
@@ -29,15 +30,9 @@ public class Message {
     @Exclude private boolean showMessageStatus = false;
     @Exclude private int messageType = Constants.NORMAL_MESSAGE;
     @Exclude private boolean animationShown = false;
-    public Message(boolean TYPING){
-        if(TYPING){
-            this.sender = "";
-            this.receiver = "";
-            this.message = "";
-            this.messageStatus = 0;
-            this.timestamp = null;
-            this.messageId = Constants.TYPING_MESSAGE_TYPE;
-        }
+
+    public Message(int messageType){
+        this.messageType  = messageType;
     }
 
 
@@ -73,9 +68,19 @@ public class Message {
         this.animationTechnique = animationTechnique;
     }
 
+
     @Exclude
     public boolean isAnimationShown() {
         return animationShown;
+    }
+
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
     }
 
     public void setAnimationShown(boolean animationShown) {
@@ -264,8 +269,13 @@ public class Message {
 
     @Exclude
     public boolean isLateReply(Message prevMessage){
-        long diff = (getMessageTimestamp() - prevMessage.getMessageTimestamp()) / (60 * 1000);
-        return  (diff) >= Constants.LATE_REPLY_TIMEOUT;
+        try{
+            long diff = (getMessageTimestamp() - prevMessage.getMessageTimestamp()) / (60 * 1000);
+            return  (diff) >= Constants.LATE_REPLY_TIMEOUT;
+        } catch (NullPointerException e){
+            e.printStackTrace();
+            return true;
+        }
 
         /*
         Timestamp currentTimestamp = new Timestamp(getMessageTimestamp());

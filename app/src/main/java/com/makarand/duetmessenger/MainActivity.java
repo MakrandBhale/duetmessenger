@@ -317,7 +317,7 @@ public class MainActivity extends AppCompatActivity implements ProfileFragment.O
     }
 
     private void fetchMessages() {
-        adapter = new MessageListAdapter(myUid,  getApplicationContext());
+        adapter = new MessageListAdapter(myUid,  getApplicationContext(), me.getChatroomId());
         messageListRecyclerView.setAdapter(adapter);
         chatsRef.keepSynced(true);
 //        TODO : get messages in set of 10, scroll to get more
